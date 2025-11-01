@@ -168,19 +168,35 @@ class ConfigPanelApp(tk.Toplevel):
         self.farm_target_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
         self.farm_target_combo.bind("<<ComboboxSelected>>", lambda e: self.save_config())
 
-        # 分割线.
+        # 休息设置
         row_counter += 1
-        ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
+        frame_row5 = ttk.Frame(self.main_frame)
+        frame_row5.grid(row=row_counter, column=0, sticky="ew", pady=5)
 
-        frame_row4 = ttk.Frame(self.main_frame)
-        frame_row4.grid(row=row_counter, column=0, sticky="ew", pady=5)  # 第二行框架
+        def checkcommand():
+            self.save_config()
         self.cast_E_check = ttk.Checkbutton(
-            frame_row4,
-            text="每5秒释放e技能",
+            frame_row5,
             variable=self.cast_e_var,
-            command=self.save_config,
-        )
-        self.cast_E_check.grid(row=0, column=0,  sticky=tk.W, pady=5)
+            text="自动放E技能",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.cast_E_check.grid(row=0, column=0)
+        ttk.Label(frame_row5, text=" | 间隔:").grid(row=0, column=1, sticky=tk.W, pady=5)
+        self.cast_intervel_entry = ttk.Entry(frame_row5,
+                                             textvariable=self.cast_intervel_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_non_neg, '%P'),
+                                             width=5)
+        self.cast_intervel_entry.grid(row=0, column=2)
+        self.button_save_cast_intervel = ttk.Button(
+            frame_row5,
+            text="保存",
+            command = self.save_config,
+            width=4
+            )
+        self.button_save_cast_intervel.grid(row=0, column=3)
 
         # 分割线
         self.columnconfigure(0, weight=1)
@@ -269,7 +285,9 @@ class ConfigPanelApp(tk.Toplevel):
             self.adb_path_change_button,
             self.adb_port_entry,
             self.button_save_adb_port,
-            self.cast_E_check
+            self.cast_E_check,
+            self.cast_intervel_entry,
+            self.button_save_cast_intervel
             ]
 
         if state == tk.DISABLED:

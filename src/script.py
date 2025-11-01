@@ -25,7 +25,8 @@ CONFIG_VAR_LIST = [
             ["last_version",                tk.StringVar,  "LAST_VERSION",               ""],
             ["latest_version",              tk.StringVar,  "LATEST_VERSION",             None],
 
-            ["cast_e_var",                  tk.BooleanVar, "_CAST_E_ABILITY",            True]
+            ["cast_e_var",                  tk.BooleanVar, "_CAST_E_ABILITY",            True],
+            ["cast_intervel_var",           tk.IntVar,     "_CAST_E_INTERVAL",           5],
             ]
 
 class FarmConfig:
@@ -619,8 +620,8 @@ def Factory():
     def ResetPosition():
         FindCoordsOrElseExecuteFallbackAndWait("放弃挑战",[50,40],1)
         FindCoordsOrElseExecuteFallbackAndWait("其他设置","设置",1)
-        FindCoordsOrElseExecuteFallbackAndWait("复位角色","其他设置",1)
-        FindCoordsOrElseExecuteFallbackAndWait("确定","复位角色",1)
+        FindCoordsOrElseExecuteFallbackAndWait(["复位角色","复位角色_云"],"其他设置",1)
+        FindCoordsOrElseExecuteFallbackAndWait("确定",["复位角色","复位角色_云"],1)
         while pos:=CheckIf(ScreenShot(),'确定'):
             Press(pos)
         Sleep(2)
@@ -645,6 +646,12 @@ def Factory():
         else:
             DeviceShell(f"input swipe 265 616 265 586 {SPLIT}")
             GoForward(time-SPLIT)
+    def GoBack(time = 1000):
+        SPLIT = 3000
+        if time <= SPLIT:
+            DeviceShell(f"input swipe 265 774 265 804 {time}")
+        else:
+            DeviceShell(f"input swipe 265 774 265 804 {SPLIT}")
     def Dodge(time = 1):
         for _ in range(time):
             Press([1518,631])
@@ -654,6 +661,12 @@ def Factory():
         FindCoordsOrElseExecuteFallbackAndWait("放弃挑战",[50,40],2)
         Press(FindCoordsOrElseExecuteFallbackAndWait("确定","放弃挑战",2))
         Sleep(2)
+
+    def CastESpell(setting):
+        if setting._CAST_E_ABILITY:
+            Press([1086,797])
+            Sleep(setting._CAST_E_INTERVAL)
+
     ##################################################################
     def QuestFarm():
         nonlocal setting # 强制自动战斗 等等.
@@ -688,13 +701,11 @@ def Factory():
                         ResetPosition()
                         reset_char_position = True
 
-                    if setting._CAST_E_ABILITY:
-                        Press([1086,797])
-                        Sleep(4.5)
+                    CastESpell(setting)
 
                     if setting._FORCESTOPING.is_set():
                         break
-            case "65皎皎币":
+            case "60皎皎币":
                 counter = 0
                 in_game_counter = 0
                 start_time = time.time()
@@ -733,33 +744,41 @@ def Factory():
                             Sleep(3)
 
                             if CheckIf(ScreenShot(), "保护目标", [[1091,353,81,64]]):
-                                QuitDungeon()
-                                counter -= 1
-                                continue
+                                GoForward(1500)
+                                DeviceShell(f"input swipe 800 450 1136 380")
+                                GoForward(1500)
+                                Press([520,785])
+                                Sleep(0.5)
+                                Press([1359,478])
+                                GoForward(20000)
 
-                            Dodge(3)
-                            GoRight(3000)
-                            GoForward(16000)
-                            GoLeft(2500)
-                            GoForward(13000)
-                            
-                            if CheckIf(ScreenShot(), "保护目标", [[502,262,96,96]]):
-                                GoLeft(4000)
-                                GoForward(30000)
+                                GoLeft(6000)
+                                GoForward(25000)
+
                                 reset_char_position = True
                                 continue
-                            if CheckIf(ScreenShot(), "保护目标", [[746,176,98,81]]):
-                                GoForward(32000)
-                                reset_char_position = True
-                                continue
+                            if CheckIf(ScreenShot(), "保护目标", [[793,174,74,86]]):
+                                Dodge(3)
+                                GoRight(3000)
+                                GoForward(16000)
+                                GoLeft(2500)
+                                GoForward(13000)
+                                
+                                if CheckIf(ScreenShot(), "保护目标", [[502,262,96,96]]):
+                                    GoLeft(4000)
+                                    GoForward(30000)
+                                    reset_char_position = True
+                                    continue
+                                if CheckIf(ScreenShot(), "保护目标", [[746,176,98,81]]):
+                                    GoForward(32000)
+                                    reset_char_position = True
+                                    continue
 
                             QuitDungeon()
                             counter -= 1
                             continue
 
-                        if setting._CAST_E_ABILITY:
-                            Press([1086,797])
-                            Sleep(4.5)
+                        CastESpell(setting)
                     
                     if setting._FORCESTOPING.is_set():
                         break
@@ -804,22 +823,13 @@ def Factory():
                     if CheckIf(scn,'indungeon',[[0,0,125,125]]):
                         if (not reset_char_position):
                             Sleep(2)
-                            GoForward(9000)
-                            GoLeft(9000)
-                            GoForward(2100)
+                            GoLeft(8500)
+                            GoForward(10300)
                             GoLeft(22500)
-                            DeviceShell(f"input swipe 800 450 450 380")
-                            Press([520,785])
-                            Sleep(0.5)
-                            Press([1359,478])
-                            Sleep(0.5)
-                            Press([1359,478])
-                            GoForward(2000)
+                            ResetPosition()
                             reset_char_position = True
 
-                        if setting._CAST_E_ABILITY:
-                            Press([1086,797])
-                            Sleep(4.5)
+                        CastESpell(setting)
                     
                     if setting._FORCESTOPING.is_set():
                         break
