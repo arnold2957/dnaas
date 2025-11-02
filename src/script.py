@@ -744,19 +744,20 @@ def Factory():
                             Sleep(3)
 
                             if CheckIf(ScreenShot(), "保护目标", [[1091,353,81,64]]):
-                                GoForward(1500)
-                                DeviceShell(f"input swipe 800 450 1136 380")
-                                GoForward(1500)
-                                Press([520,785])
-                                Sleep(0.5)
-                                Press([1359,478])
-                                GoForward(20000)
+                                # GoForward(1500)
+                                # DeviceShell(f"input swipe 800 450 1136 380")
+                                # GoForward(1500)
+                                # Press([520,785])
+                                # Sleep(0.5)
+                                # Press([1359,478])
+                                # GoForward(20000)
 
-                                GoLeft(6000)
-                                GoForward(25000)
+                                # GoLeft(6000)
+                                # GoForward(25000)
 
-                                reset_char_position = True
-                                continue
+                                # reset_char_position = True
+                                # continue
+                                None
                             if CheckIf(ScreenShot(), "保护目标", [[793,174,74,86]]):
                                 Dodge(3)
                                 GoRight(3000)
@@ -829,6 +830,37 @@ def Factory():
                             ResetPosition()
                             reset_char_position = True
 
+                        CastESpell(setting)
+                    
+                    if setting._FORCESTOPING.is_set():
+                        break
+            case "[简易]15波火材料无尽探险":
+                counter = 0
+                in_game_counter = 0
+                start_time = time.time()
+                total_time = 0
+                reset_char_position = False
+                MAX_TUEN = 15
+                logger.info("开始任务!")
+                   
+                while 1:
+                    scn = ScreenShot()
+                    if Press(CheckIf(scn, "开始挑战")):
+                        Sleep(10)
+                        continue
+                    if pos:=(CheckIf(scn, "继续挑战")):
+                        logger.info(f"已完成{in_game_counter + 1}小局")
+                        if in_game_counter < MAX_TUEN - 1:
+                            Press(pos)
+                            in_game_counter +=1
+                        else:
+                            in_game_counter = 0
+                            logger.info("已完成目标小局, 撤离")
+                            Press(CheckIf(scn, "撤离"))
+                            Sleep(2)
+                            break
+                    
+                    if CheckIf(scn,'indungeon',[[0,0,125,125]]):
                         CastESpell(setting)
                     
                     if setting._FORCESTOPING.is_set():
