@@ -15,5 +15,9 @@
     "[简易]15波火材料无尽探险":{
         "questName":"[简易]15波火材料无尽探险",
         "_TYPE":"quest"
+    },
+    "test":{
+        "questName":"test",
+        "_TYPE":"quest"
     }
 }

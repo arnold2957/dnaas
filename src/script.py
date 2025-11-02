@@ -628,30 +628,31 @@ def Factory():
     def GoLeft(time = 1000):
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 143 692 206 692 {time}")
+            DeviceShell(f"input swipe 0 698 0 698 {time}")
         else:
-            DeviceShell(f"input swipe 143 692 206 692 {SPLIT}")
+            DeviceShell(f"input swipe 0 698 0 698 {SPLIT}")
             GoLeft(time-SPLIT)
+            
     def GoRight(time = 1000):
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 339 698 384 698 {time}")
+            DeviceShell(f"input swipe 526 698 526 698 {time}")
         else:
-            DeviceShell(f"input swipe 339 698 384 698 {SPLIT}")
+            DeviceShell(f"input swipe 526 698 526 698 {SPLIT}")
             GoRight(time-SPLIT)
     def GoForward(time = 1000):
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 265 616 265 586 {time}")
+            DeviceShell(f"input swipe 265 616 265 616 {time}")
         else:
-            DeviceShell(f"input swipe 265 616 265 586 {SPLIT}")
+            DeviceShell(f"input swipe 265 616 265 616 {SPLIT}")
             GoForward(time-SPLIT)
     def GoBack(time = 1000):
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 265 774 265 804 {time}")
+            DeviceShell(f"input swipe 263 800 263 800  {time}")
         else:
-            DeviceShell(f"input swipe 265 774 265 804 {SPLIT}")
+            DeviceShell(f"input swipe 263 800 263 800  {SPLIT}")
     def Dodge(time = 1):
         for _ in range(time):
             Press([1518,631])
@@ -666,7 +667,16 @@ def Factory():
         if setting._CAST_E_ABILITY:
             Press([1086,797])
             Sleep(setting._CAST_E_INTERVAL)
-
+    
+    def CheckIfInDungeon(scn = None):
+        if scn is None:
+            scn = ScreenShot()
+        
+        if CheckIf(scn,'indungeon',[[0,0,125,125]]) or CheckIf(scn,'indungeon_cloud',[[0,0,125,125]]):
+            logger.info("已在副本中.")
+            return True
+        else:
+            return False
     ##################################################################
     def QuestFarm():
         nonlocal setting # 强制自动战斗 等等.
@@ -738,7 +748,7 @@ def Factory():
                         reset_char_position = False
                         continue
                     
-                    if CheckIf(scn,'indungeon',[[0,0,125,125]]):
+                    if CheckIfInDungeon(scn):
                         if (not reset_char_position):
                             ResetPosition()
                             Sleep(3)
@@ -821,7 +831,7 @@ def Factory():
                         QuitDungeon()
                         start_time = time.time()
                     
-                    if CheckIf(scn,'indungeon',[[0,0,125,125]]):
+                    if CheckIfInDungeon(scn):
                         if (not reset_char_position):
                             Sleep(2)
                             GoLeft(8500)
@@ -860,11 +870,19 @@ def Factory():
                             Sleep(2)
                             break
                     
-                    if CheckIf(scn,'indungeon',[[0,0,125,125]]):
+                    if CheckIfInDungeon(scn):
                         CastESpell(setting)
                     
                     if setting._FORCESTOPING.is_set():
                         break
+            case "test":
+                DeviceShell(f"input swipe 263 520 263 520 2000")
+                Sleep(1)
+                DeviceShell(f"input swipe 263 800 263 800 2000")
+                Sleep(1)
+                DeviceShell(f"input swipe 526 698 526 698 2000")
+                Sleep(1)
+                DeviceShell(f"input swipe 0 698 0 698 2000")
         setting._FINISHINGCALLBACK()
         return
     def Farm(set:FarmConfig):
