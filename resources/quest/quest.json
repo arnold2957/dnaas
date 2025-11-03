@@ -5,7 +5,11 @@
         "_TYPE":"quest"
     },
     "60皎皎币":{
-        "questName":"60皎皎币(测试)",
+        "questName":"60皎皎币",
+        "_TYPE":"quest"
+    },
+    "70皎皎币":{
+        "questName":"70皎皎币",
         "_TYPE":"quest"
     },
     "65mod":{

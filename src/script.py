@@ -12,6 +12,8 @@ from threading import Thread,Event
 from pathlib import Path
 import numpy as np
 import copy
+import math
+
 
 DUNGEON_TARGETS = BuildQuestReflection()
 
@@ -29,6 +31,7 @@ CONFIG_VAR_LIST = [
             ["cast_intervel_var",           tk.IntVar,     "_CAST_E_INTERVAL",           5],
             ["restart_intervel_var",        tk.IntVar,     "_RESTART_INTERVAL",          2000],
             ["green_book_var",              tk.BooleanVar, "_GREEN_BOOK",                False],
+            ["cast_e_random_var",           tk.BooleanVar, "_CAST_E_RANDOM",             False]
             ]
 
 class FarmConfig:
@@ -669,17 +672,27 @@ def Factory():
     def CastESpell():
         nonlocal runtimeContext
         PROB = [1,0.30210303,0.14445311,0.08474409,0.05570346,0.03936413,0.0290976,0.02201336,0.01675358,0.01263117,0.00926888,0.00644352,0.0040144,0.00188813,0]
-        if setting._CAST_E_ABILITY:
-            prob_setting = PROB[setting._CAST_E_INTERVAL-1] if setting._CAST_E_INTERVAL<=15 and setting._CAST_E_INTERVAL >=1 else 1
-            threshold = prob_setting * (runtimeContext._SPELL_E_CAST_COUNTER + 1)
-            this_roll = random.random()
-            # logger.info(f"{this_roll:.2f} {threshold:.2f}")
-            if this_roll > threshold:
-                runtimeContext._SPELL_E_CAST_COUNTER += 1
-            else:
-                runtimeContext._SPELL_E_CAST_COUNTER = 0
-                Press([1086,797])
-        Sleep(random.uniform(0.95,1.05))
+        if setting._CAST_E_RANDOM:
+            logger.info("1")
+            if setting._CAST_E_ABILITY:
+                prob_setting = PROB[setting._CAST_E_INTERVAL-1] if setting._CAST_E_INTERVAL<=15 and setting._CAST_E_INTERVAL >=1 else 1
+                threshold = prob_setting * (runtimeContext._SPELL_E_CAST_COUNTER + 1)
+                this_roll = random.random()
+                # logger.info(f"{this_roll:.2f} {threshold:.2f}")
+                if this_roll > threshold:
+                    runtimeContext._SPELL_E_CAST_COUNTER += 1
+                else:
+                    runtimeContext._SPELL_E_CAST_COUNTER = 0
+                    Press([1086,797])
+        else:
+            logger.info("2")
+            if setting._CAST_E_ABILITY:
+                logger.info(f"{runtimeContext._SPELL_E_CAST_COUNTER} {setting._CAST_E_INTERVAL}")
+                if runtimeContext._SPELL_E_CAST_COUNTER < setting._CAST_E_INTERVAL:
+                    runtimeContext._SPELL_E_CAST_COUNTER += 1
+                else:
+                    runtimeContext._SPELL_E_CAST_COUNTER = 0
+                    Press([1086,797])
     
     def CheckIfInDungeon(scn = None):
         if scn is None:
@@ -743,6 +756,8 @@ def Factory():
                 QuitDungeon()
                 start_time = time.time()
                 continue
+            t = time.time()
+            Sleep(math.ceil(t) - t)
             CastESpell()
             if setting._FORCESTOPING.is_set():
                 break
@@ -754,7 +769,7 @@ def Factory():
             case "驱离":
                 def resetMove():
                     GoRight(500)
-                    GoForward(2000)
+                    GoForward(15000)
                     return True
                 BasicQuest(resetMove)
 
@@ -799,9 +814,10 @@ def Factory():
             case "65mod":
                 def resetMove():
                     Sleep(2)
-                    GoLeft(8500)
-                    GoForward(10300)
-                    GoLeft(22500)
+                    GoBack(1000)
+                    GoLeft(6000)
+                    GoForward(11300)
+                    GoLeft(23000)
                     ResetPosition()
                     return True
 
@@ -812,12 +828,13 @@ def Factory():
                     Sleep(3)
 
                     if CheckIf(ScreenShot(), "保护目标", [[394,297,169,149]]):
-                        GoLeft(3000)
+                        GoLeft(2800)
+                        Sleep(2)
                         if Press(CheckIf(ScreenShot(),"操作")):
-                            Sleep(3)
+                            Sleep(2)
                             if Press(CheckIf(ScreenShot(),"快速破解")):
-                                Sleep(3)
-                                GoRight(1000)
+                                Sleep(2)
+                                GoRight(800)
                                 return True
                             
                     return False
@@ -828,6 +845,32 @@ def Factory():
                     return True
                 
                 BasicQuest(resetMove,15)
+            case "70皎皎币":
+                def resetMove():
+                    Sleep(2)
+                    ResetPosition()
+                    scn = ScreenShot()
+                    if CheckIf(scn,"保护目标", [[784,254,107,112]]):
+                        GoForward(14000)
+                        GoRight(1200)
+                        GoForward(8000)
+                        GoRight(1200)
+                        GoForward(7000)
+                        ResetPosition()
+                        return True
+                    if CheckIf(scn,"保护目标", [[377,366,222,197]]):
+                        GoBack(1000)
+                        GoLeft(6000)
+                        GoForward(11300)
+                        GoLeft(23000)
+                        GoLeft(6000)
+                        GoBack(500)
+                        GoLeft(3000)
+                        return True
+                    
+                    return False
+
+                BasicQuest(resetMove)  
         setting._FINISHINGCALLBACK()
         return
     def Farm(set:FarmConfig):

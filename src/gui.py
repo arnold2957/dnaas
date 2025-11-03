@@ -198,6 +198,20 @@ class ConfigPanelApp(tk.Toplevel):
             )
         self.button_save_cast_intervel.grid(row=0, column=3)
 
+        # 休息设置
+        row_counter += 1
+        frame_row4 = ttk.Frame(self.main_frame)
+        frame_row4.grid(row=row_counter, column=0, sticky="ew", pady=5)
+
+        self.cast_E_random_check = ttk.Checkbutton(
+            frame_row4,
+            variable=self.cast_e_random_var,
+            text="释放E时随机扰动",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.cast_E_random_check.grid(row=0, column=0)
+
         # 超时设置
         row_counter += 1
         frame_row6 = ttk.Frame(self.main_frame)
@@ -325,7 +339,8 @@ class ConfigPanelApp(tk.Toplevel):
             self.button_save_cast_intervel,
             self.restart_intervel_entry,
             self.button_save_restart_intervel,
-            self.use_green_book_check
+            self.use_green_book_check,
+            self.cast_E_random_check
             ]
 
         if state == tk.DISABLED:
