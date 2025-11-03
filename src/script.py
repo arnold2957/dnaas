@@ -624,7 +624,7 @@ def Factory():
                 continue
     ##################################################################
     def ResetPosition():
-        FindCoordsOrElseExecuteFallbackAndWait("放弃挑战",[50,40],1)
+        FindCoordsOrElseExecuteFallbackAndWait(["放弃挑战","放弃挑战2"],[50,40],1)
         FindCoordsOrElseExecuteFallbackAndWait("其他设置","设置",1)
         FindCoordsOrElseExecuteFallbackAndWait(["复位角色","复位角色_云"],"其他设置",1)
         FindCoordsOrElseExecuteFallbackAndWait("确定",["复位角色","复位角色_云"],1)
