@@ -240,6 +240,34 @@ class ConfigPanelApp(tk.Toplevel):
         row_counter += 1
         ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
 
+        # 自动放Q技能
+        row_counter += 1
+        frame_row5 = ttk.Frame(self.main_frame)
+        frame_row5.grid(row=row_counter, column=0, sticky="ew", pady=5)
+
+        self.cast_Q_check = ttk.Checkbutton(
+            frame_row5,
+            variable=self.cast_q_var,
+            text="自动放Q技能",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.cast_Q_check.grid(row=0, column=0)
+        ttk.Label(frame_row5, text=" | 间隔(秒):").grid(row=0, column=1, sticky=tk.W, pady=5)
+        self.cast_Q_intervel_entry = ttk.Entry(frame_row5,
+                                             textvariable=self.cast_Q_intervel_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_non_neg, '%P'),
+                                             width=5)
+        self.cast_Q_intervel_entry.grid(row=0, column=2)
+        self.button_save_cast_Q_intervel = ttk.Button(
+            frame_row5,
+            text="保存",
+            command = self.save_config,
+            width=4
+            )
+        self.button_save_cast_Q_intervel.grid(row=0, column=3)
+
         # 自动放E技能
         row_counter += 1
         frame_row5 = ttk.Frame(self.main_frame)
@@ -378,7 +406,10 @@ class ConfigPanelApp(tk.Toplevel):
             self.cast_E_random_check,
             self.round_custom_check,
             self.round_custom_time_entry,
-            self.button_save_round_custom
+            self.button_save_round_custom,
+            self.cast_Q_check,
+            self.cast_Q_intervel_entry,
+            self.button_save_cast_Q_intervel
             ]
 
         if state == tk.DISABLED:
