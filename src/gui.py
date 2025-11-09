@@ -184,7 +184,6 @@ class ConfigPanelApp(tk.Toplevel):
         self.farm_target_extra_combo.grid(row=0, column=3, sticky=(tk.W, tk.E), pady=5)
         self.farm_target_extra_combo.bind("<<ComboboxSelected>>", lambda e: self.save_config())
 
-
         # 分割线.
         row_counter += 1
         ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
@@ -259,9 +258,25 @@ class ConfigPanelApp(tk.Toplevel):
             )
         self.use_green_book_final_check.grid(row=0, column=1)
 
+
+
         # 分割线.
         row_counter += 1
         ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
+
+        # 重置后上猪
+        row_counter += 1
+        frame_row = ttk.Frame(self.main_frame)
+        frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5)
+
+        self.cast_Q_once_check = ttk.Checkbutton(
+            frame_row,
+            variable=self.cast_Q_once_var,
+            text="(仅一次)开局后释放Q",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.cast_Q_once_check.grid(row=0, column=0)
 
         # 自动放Q技能
         row_counter += 1
@@ -436,7 +451,8 @@ class ConfigPanelApp(tk.Toplevel):
             self.cast_E_print_check,
             self.farm_target_extra_combo,
             self.farm_target_combo,
-            self.farm_target_lvl_combo
+            self.farm_target_lvl_combo,
+            self.cast_Q_once_check
             ]
 
         if state == tk.DISABLED:
