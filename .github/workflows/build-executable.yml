@@ -53,22 +53,22 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onedir --add-data "resources;resources/" src/main.py -n wvd
+        pyinstaller --onedir --add-data "resources;resources/" src/main.py -n dnaas
         Write-Host "Build completed successfully."
 
     - name: Compress build artifact to ZIP
       shell: pwsh
       run: |
         # Copy changelog into the build directory before zipping
-        Copy-Item -Path './CHANGES_LOG.md' -Destination './dist/wvd/' -Force
-        Compress-Archive -Path ./dist/wvd/* -DestinationPath ./dist/wvd.zip -Force
-        Get-ChildItem dist/wvd.zip
+        Copy-Item -Path './CHANGES_LOG.md' -Destination './dist/dnaas/' -Force
+        Compress-Archive -Path ./dist/dnaas/* -DestinationPath ./dist/dnaas.zip -Force
+        Get-ChildItem dist/dnaas.zip
 
     - name: Prepare Release Notes and Metadata
       id: prepare-release-meta
       shell: pwsh
       run: |
-        $md5 = (Get-FileHash -Path dist/wvd.zip -Algorithm MD5).Hash.ToLower()
+        $md5 = (Get-FileHash -Path dist/dnaas.zip -Algorithm MD5).Hash.ToLower()
         echo "md5=$md5" >> $env:GITHUB_OUTPUT
         echo "MD5: $md5"
         
@@ -84,7 +84,7 @@ jobs:
           version = $version
           md5 = $md5
           release_date = $date
-          download_url = "https://github.com/${{ github.repository }}/releases/download/$version/wvd.zip"
+          download_url = "https://github.com/${{ github.repository }}/releases/download/$version/dnaas.zip"
           release_notes = "https://github.com/${{ github.repository }}/releases/tag/$version"
         } | ConvertTo-Json
 
@@ -98,7 +98,7 @@ jobs:
         tag_name: ${{ steps.extract-version.outputs.version }}
         name: Release ${{ steps.extract-version.outputs.version }}
         body_path: dist/release_notes.md
-        files: dist/wvd.zip
+        files: dist/dnaas.zip
 
     - name: Force set as prerelease
       if: ${{ steps.extract-version.outputs.is_prerelease == 'true' }}
