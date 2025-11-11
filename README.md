@@ -69,7 +69,7 @@
 本脚本有自动截图功能，你可以把截图和log[发给我](https://github.com/arnold2957/dnaas/issues/new)。
 
 ## 代码和开源
-因为大部分内容都是和[wvdas](https://github.com/arnold2957/wvd/)一样的, 同时也为了避免有心人拿去换皮倒卖, 所以删除了某个核心文件.
+大部分内容都是和[wvdas](https://github.com/arnold2957/wvd/)一样的. 请不要拿去倒卖!
 
 ## 我想要赞助这个项目
 非常感谢你的支持!
