@@ -878,7 +878,9 @@ def Factory():
         Sa = 1/d1 + 1/d2
         Sb = 1/d3 + 1/d4
         k = Sa/(Sa+Sb)
-        logger.info(f"定位结果: {k:.2f}.\n如果你发现这个数字接近0.5, 请向作者报告你的画面设置和是否是云游戏.")
+        logger.info(f"定位结果: {k:.2f}.")
+        if (k >= 0.48) and (k <= 0.52):
+            logger.info(f"如果你多次看见本条信息, 请向作者报告你的画面设置和是否是云游戏.")
         if k > 0.5:
             return "A"
         else:
@@ -1177,7 +1179,7 @@ def Factory():
                                 if CheckIf(ScreenShot(),"再次进行"):
                                     return True
                                 continue
-                            k = InverseDistanceWeighting(*CalculRoIAverRGB(scn,[[0,535,544,899-535]]))
+                            k = InverseDistanceWeighting(*CalculRoIAverRGB(ScreenShot(),[[0,535,544,899-535]]))
                             if k == 'A':
                                 GoRight(round((3-2/60)*1000))
                                 GoForward(round((2+30/60)*1000))
@@ -1188,8 +1190,7 @@ def Factory():
                                 GoRight(round((9-14/60)*1000))
                                 continue
                             if k == 'B':
-                                GoForward(200)
-                                GoForward(800)
+                                GoForward(1000)
                                 GoRight(round((14-56/60)*1000))
                                 GoForward(round((6+24/60)*1000))
                                 GoLeft(round((4-54/60)*1000))
@@ -1346,6 +1347,7 @@ def Factory():
             nonlocal NL_start_time
             if pos:=(CheckIf(scn, "再次进行")):
                 Press(pos)
+                runtimeContext._CASTED_Q = False
                 cost_time = time.time()-NL_start_time
                 if cost_time > 10:
                     NL_game_counter += 1
