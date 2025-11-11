@@ -20,7 +20,7 @@ DUNGEON_TARGETS = {
     "武器突破": {"60":5, "70":6},
     "皎皎币":   {"60":3,"70":4},
     "夜航手册": {"40":3,"50":4,"55":5, "60":6,"65":7,"70":8},
-    "开核桃": {"驱离":0, "生存":0, "无巧手生存":0}
+    "开密函": {"驱离":0, "探险无尽":0, "无巧手探险无尽":0}
     }
 DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9"]
 
@@ -749,7 +749,7 @@ def Factory():
     def ResetPosition():
         logger.info("开始复位.")
         try:
-            FindCoordsOrElseExecuteFallbackAndWait(["放弃挑战","放弃挑战_云"],[50,40],1)
+            FindCoordsOrElseExecuteFallbackAndWait(["放弃挑战","放弃挑战_云"],['indungeon','indungeon_cloud'],1)
             FindCoordsOrElseExecuteFallbackAndWait("其他设置","设置",1)
             FindCoordsOrElseExecuteFallbackAndWait(["复位角色","复位角色_云"],"其他设置",1)
             FindCoordsOrElseExecuteFallbackAndWait("确定",["复位角色","复位角色_云"],1)
@@ -895,8 +895,8 @@ def Factory():
             Sleep(0.5)
     ##################################################################
     def BasicQuestSelect():
-        if setting._FARM_TYPE == "开核桃":
-            logger.info("错误: 开核桃模式无法自动选择任务. 取消执行.")
+        if setting._FARM_TYPE == "开密函":
+            logger.info("错误: 开密函模式无法自动选择任务. 取消执行.")
             setting._FORCESTOPING.set()
             return 
         elif setting._FARM_TYPE != "夜航手册":
@@ -945,7 +945,7 @@ def Factory():
 
     def resetMove():
         match setting._FARM_TYPE+setting._FARM_LVL:
-            case "夜航手册40" | "夜航手册55" | "夜航手册60" | "开核桃驱离":
+            case "夜航手册40" | "夜航手册55" | "夜航手册60" | "开密函驱离":
                 GoForward(15000)
                 GoBack(1000)
                 GoLeft(100)
@@ -1098,7 +1098,7 @@ def Factory():
                         GoLeft(200)
                         return True
                 return False
-            case "角色材料10" :
+            case "角色材料10" | "开密函探险无尽":
                 if not ResetPosition():
                     return False
                 Sleep(3)
@@ -1108,7 +1108,7 @@ def Factory():
                         GoRight(800)
                         return True
                 return False
-            case "角色材料30" | "角色材料60" | "开核桃生存":
+            case "角色材料30" | "角色材料60":
                 if not ResetPosition():
                     return False
                 GoLeft(9150)
@@ -1221,12 +1221,12 @@ def Factory():
             logger.info(f"已设置自定义轮数, 每次将刷取{DEFAULTWAVE}轮次.")
         else:
             match setting._FARM_TYPE+setting._FARM_LVL:
-                case "皎皎币60":
+                case "皎皎币60" | "皎皎币70":
                     DEFAULTWAVE = 3
                 case "角色材料10":
                     DEFAULTWAVE = 15
-                case "角色材料30" | "角色材料60":
-                    DEFAULTWAVE = 10
+                case "角色材料30" | "角色材料60" | "开密函探险无尽" | "开密函无巧手探险无尽":
+                    DEFAULTWAVE = 15
                 case _:
                     DEFAULTWAVE = 1
             logger.info(f"{setting._FARM_TYPE+setting._FARM_LVL}的默认局内轮次数为{DEFAULTWAVE}.")
