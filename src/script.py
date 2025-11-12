@@ -20,7 +20,9 @@ DUNGEON_TARGETS = {
     "武器突破": {"60":5, "70":6},
     "皎皎币":   {"60":3,"70":4},
     "夜航手册": {"40":3,"50":4,"55":5, "60":6,"65":7,"70":8},
-    "开密函": {"驱离":0, "探险无尽":0, "无巧手探险无尽":0}
+    # "mod强化": {"60":3},
+    "开密函": {"驱离":0, "探险无尽":0, "无巧手探险无尽":0},
+    # "钓鱼": {"无悠闲":0}
     }
 DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9"]
 
@@ -64,27 +66,15 @@ class FarmConfig:
 class RuntimeContext:
     #### 统计信息
     _LAPTIME = 0
-    _TOTALTIME = 0
-    _COUNTERDUNG = 0
-    _COUNTERCOMBAT = 0
-    _COUNTERCHEST = 0
-    _TIME_COMBAT= 0
-    _TIME_COMBAT_TOTAL = 0
-    _TIME_CHEST = 0
-    _TIME_CHEST_TOTAL = 0
+    _TOTAL_TIME = 0
+    _START_TIME = time.time()
+    _GAME_COUNTER = 0
+    _IN_GAME_COUNTER = 1
     #### 其他临时参数
-    _MEET_CHEST_OR_COMBAT = False
-    _ENOUGH_AOE = False
-    _COMBATSPD = False
-    _SUICIDE = False # 当有两个人死亡的时候(multipeopledead), 在战斗中尝试自杀.
     _MAXRETRYLIMIT = 20
-    _ACTIVESPELLSEQUENCE = None
-    _SHOULDAPPLYSPELLSEQUENCE = True
-    _RECOVERAFTERREZ = False
-    _ZOOMWORLDMAP = False
-    _CRASHCOUNTER = 0
-    _IMPORTANTINFO = ""
     _CASTED_Q = False
+    _GAME_PREPARE = False
+    _CRASHCOUNTER = 0
 class FarmQuest:
     _DUNGWAITTIMEOUT = 0
     _TARGETINFOLIST = None
@@ -255,13 +245,13 @@ def CheckRestartConnectADB(setting: FarmConfig):
 
             logger.info(f"连接失败: {result.stderr.strip()}")
             time.sleep(2)
-            KillEmulator(setting)
+            # KillEmulator(setting)
             KillAdb(setting)
             time.sleep(2)
         except Exception as e:
             logger.error(f"重启ADB服务时出错: {e}")
             time.sleep(2)
-            KillEmulator(setting)
+            # KillEmulator(setting)
             KillAdb(setting)
             time.sleep(2)
             return None
@@ -506,7 +496,8 @@ def Factory():
     def CheckIf(screenImage, shortPathOfTarget, roi = None, outputMatchResult = False):
         template = LoadTemplateImage(shortPathOfTarget)
         if outputMatchResult:
-            cv2.imwrite("beforeRoI.png", screenImage)
+            t = time.time()
+            cv2.imwrite(f"DUBUG_beforeRoI_{t}.png", screenImage)
         screenshot = screenImage.copy()
         threshold = 0.80
         pos = None
@@ -526,9 +517,9 @@ def Factory():
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
         if outputMatchResult:
-            cv2.imwrite("origin.png", screenshot)
+            cv2.imwrite(f"DEBUG_origin_{t}.png", screenshot)
             cv2.rectangle(screenshot, max_loc, (max_loc[0] + template.shape[1], max_loc[1] + template.shape[0]), (0, 255, 0), 2)
-            cv2.imwrite("matched.png", screenshot)
+            cv2.imwrite(f"DEBUG_matched_{t}.png", screenshot)
 
         logger.debug(f"搜索到疑似{shortPathOfTarget}, 匹配程度:{max_val*100:.2f}%")
         if max_val < threshold:
@@ -690,11 +681,10 @@ def Factory():
             always_do_after()
     def restartGame(skipScreenShot = False):
         nonlocal runtimeContext
-        runtimeContext._COMBATSPD = False # 重启会重置2倍速, 所以重置标识符以便重新打开.
+        runtimeContext._GAME_PREPARE = False
         runtimeContext._MAXRETRYLIMIT = min(50, runtimeContext._MAXRETRYLIMIT + 5) # 每次重启后都会增加5次尝试次数, 以避免不同电脑导致的反复重启问题.
-        runtimeContext._TIME_CHEST = 0
-        runtimeContext._TIME_COMBAT = 0 # 因为重启了, 所以清空战斗和宝箱计时器.
-        runtimeContext._ZOOMWORLDMAP = False
+        runtimeContext._IN_GAME_COUNTER = 1
+        runtimeContext._CASTED_Q = False
 
         if not skipScreenShot:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 格式：20230825_153045
@@ -802,7 +792,7 @@ def Factory():
             Sleep(1)
     def QuitDungeon():
         try:
-            FindCoordsOrElseExecuteFallbackAndWait(["任务图标","放弃挑战","放弃挑战_云","再次进行"],[50,40],2)
+            FindCoordsOrElseExecuteFallbackAndWait(["任务图标","放弃挑战","放弃挑战_云","再次进行"],['indungeon','indungeon_cloud'],2)
             scn = ScreenShot()
             if CheckIf(scn,"任务图标"):
                 logger.info("奇怪, 怎么已经退出了.")
@@ -848,6 +838,25 @@ def Factory():
                 Press([1205,779])
                 Sleep(2)
                 runtimeContext._CASTED_Q = True
+    def CastDoubleJump():
+        if not setting._CAST_Q_ONCE:
+            if not setting._CAST_Q_ABILITY:
+                if not setting._CAST_E_ABILITY:
+                    if not hasattr(CastDoubleJump, 'last_cast_time'):
+                        CastDoubleJump.last_cast_time = 0
+                    if time.time() - CastDoubleJump.last_cast_time > 20:
+                        logger.info("呃, 什么都不干可不行, 会被踢出去的.")
+                        Press([1203,631])
+                        Sleep(1)
+                        Press([1097,658])
+                        Sleep(1)
+                        DoubleJump()
+                        CastDoubleJump.last_cast_time = time.time()
+    def CastSpell():
+        CastDoubleJump()
+        CastQOnce()
+        CastESpell()
+        CastQSpell()
     def CheckIfInDungeon(scn = None):
         if scn is None:
             scn = ScreenShot()
@@ -885,7 +894,7 @@ def Factory():
             return "A"
         else:
             return "B"
-    def AUTOCalibration(roi = [[175,89,1177,719]]):
+    def AUTOCalibration_Y(roi = [[175,89,1177,719]]):
         while 1:
             pos = CheckIf(ScreenShot(),"保护目标",roi) or CheckIf(ScreenShot(),"撤离点",roi)
             if not pos:
@@ -895,6 +904,19 @@ def Factory():
                 return True 
             DeviceShell(f"input swipe 800 450 {round((pos[0]-800)/3.5+800)} 450")
             Sleep(0.5)
+    def AUTOCalibration_P(tar):
+        roi = [[175,89,1177,719]]
+        for _ in range(50):
+            pos = CheckIf(ScreenShot(),"保护目标",roi) or CheckIf(ScreenShot(),"撤离点",roi)
+            if pos:
+                delta = [round((pos[0]-tar[0])), round((pos[1]-tar[1]))]
+                logger.info(f"{pos} {tar} {delta}")
+                if (abs(delta[0]) <= 5) and (abs(delta[1]) <= 5):
+                    return True
+                delta = [x/abs(x) * round(50 * abs(x) / (50 + abs(x))) if x!=0 else 0 for x in delta]
+                DeviceShell(f"input swipe 800 450 {delta[0]+800} {delta[1]+450}")
+                Sleep(0.5)
+        return False
     ##################################################################
     def BasicQuestSelect():
         if setting._FARM_TYPE == "开密函":
@@ -902,14 +924,13 @@ def Factory():
             setting._FORCESTOPING.set()
             return 
         elif setting._FARM_TYPE != "夜航手册":
-            FindCoordsOrElseExecuteFallbackAndWait("开始挑战",[setting._FARM_TYPE,"input swipe 1400 400 1300 400"],2)
+            FindCoordsOrElseExecuteFallbackAndWait(setting._FARM_TYPE,"input swipe 1400 400 1300 400",1)
+            FindCoordsOrElseExecuteFallbackAndWait("开始挑战",setting._FARM_TYPE,2)
             roi = [50,182+57*(DUNGEON_TARGETS[setting._FARM_TYPE][setting._FARM_LVL]-1),275,57]
             scn = ScreenShot()
-            if pos:=CheckIf(scn,"开始挑战"):
+            if CheckIf(scn,"开始挑战"):
                 if Press(CheckIf(scn,"等级未选中",[roi])):
                     Sleep(2)
-                else:
-                    Press(pos)
             else:
                 return # 错误. 退出.
             if setting._FARM_TYPE == "角色材料":
@@ -1039,7 +1060,7 @@ def Factory():
                     if not ResetPosition():
                         return False
                     GoForward(10000)
-                    AUTOCalibration()
+                    AUTOCalibration_Y()
                     GoForward(5000)
                     return True
                 if CheckIf(ScreenShot(), "保护目标", [[764,217,80,96]]):
@@ -1080,12 +1101,10 @@ def Factory():
                         if not ResetPosition():
                             return False
                         for i in range(setting._RESTART_INTERVAL):
-                            if CheckIf(ScreenShot(), "可前往撤离点"):
+                            if CheckIf(ScreenShot(), "血清100%",[[69,227,153,108]],True):
                                 break
                             else:
-                                CastQOnce()
-                                CastESpell()
-                                CastQSpell()
+                                CastSpell()
                                 Sleep(1)
                             if i == setting._RESTART_INTERVAL - 1:
                                 return False
@@ -1141,7 +1160,7 @@ def Factory():
                 GoForward(round((1+20/60)*1000))
                 GoLeft(round((4+14/60)*1000))
                 GoForward(6000)
-                if AUTOCalibration([[395,61,769,381]]):
+                if AUTOCalibration_Y([[395,61,769,381]]):
                     GoForward(round((3.5+16/60)*1000))
                     DoubleJump()
                     GoForward(1000)
@@ -1160,9 +1179,7 @@ def Factory():
                             if CheckIf(ScreenShot(), "可前往撤离点"):
                                 break
                             else:
-                                CastQOnce()
-                                CastESpell()
-                                CastQSpell()
+                                CastSpell()
                                 Sleep(1)
                             if i == setting._RESTART_INTERVAL - 1:
                                 return False 
@@ -1174,7 +1191,7 @@ def Factory():
                                 return False
                             Sleep(3)
                             if CheckIf(scn,"撤离点",[[708,394,145,182]]):
-                                AUTOCalibration([[634,394,350,159]])
+                                AUTOCalibration_Y([[634,394,350,159]])
                                 GoForward(round((24-4/60)*1000))
                                 if CheckIf(ScreenShot(),"再次进行"):
                                     return True
@@ -1195,22 +1212,52 @@ def Factory():
                                 GoForward(round((6+24/60)*1000))
                                 GoLeft(round((4-54/60)*1000))
                                 GoForward(round((4-10/60)*1000))
-                                if AUTOCalibration([[634,394,350,159]]):
+                                if AUTOCalibration_Y([[634,394,350,159]]):
                                     GoForward(round((24-4/60)*1000))
                                     if CheckIf(ScreenShot(),"再次进行"):
                                         return True
                                 continue
+                return False
+            case "mod强化60":
+                if not AUTOCalibration_P([800,600]):
+                    return
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                Press([1336,630])
+                if not AUTOCalibration_P([800,450]): 
+                    return
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                DeviceShell("input swipe 1336 630 1336 630 500")
+                Sleep(0.4)
+                Sleep(3)
+                scn = ScreenShot()
+                if CheckIf(scn,"保护目标", [[802-50,480-50,100,100]]):
+                    logger.info("正对")
+                elif CheckIf(scn,"保护目标", [[646-50,377-50,100,100]]):
+                    logger.info("左上")
+                elif CheckIf(scn,"保护目标", [[1095-50,431-50,100,100]]):
+                    logger.info("右上")
+                elif CheckIf(scn,"保护目标", [[1124-50,442-50,100,100]]):
+                    logger.info("右中")
                 return False
             case _ :
                 logger.info("没有设定开场移动. 原地挂机.")
                 return True
     ################################################################
     def QuestFarm():
-        NL_in_game_counter = 1
-        NL_start_time = time.time()
-        NL_total_time = 0
-        NL_game_prepare = False
-        NL_game_counter = 0
+        nonlocal runtimeContext
+        runtimeContext._START_TIME = time.time()
+        runtimeContext._TOTAL_TIME = 0
+        runtimeContext._IN_GAME_COUNTER = 1
+        runtimeContext._GAME_COUNTER = 0
+        runtimeContext._GAME_PREPARE = False
 
         if (setting._FARM_TYPE not in DUNGEON_TARGETS.keys()) or (setting._FARM_LVL not in DUNGEON_TARGETS[setting._FARM_TYPE].keys()):
             logger.info("\n\n任务列表已更新! 请重新手动选择地下城任务!\n\n")
@@ -1239,12 +1286,49 @@ def Factory():
             return func
         
         @register
+        def handle_relogin(scn):
+            if Press(CheckIf(scn,"重新连接")):
+                logger.info("重新连接.")
+                Sleep(1)
+                return True
+            return False
+        @register
         def handle_login(scn):
             if Press(CheckIf(scn, "点击进入游戏")) or Press(CheckIf(scn, "点击进入游戏_云")):
                 logger.info("点击进入游戏.")
                 Sleep(20)
                 return True
             return False
+        @register
+        def handle_fishing(scn):
+            if setting._FARM_TYPE == "钓鱼":
+                if not CheckIf(scn, "下钩"):
+                    logger.info("无法钓鱼. 请在抛杆后开启任务")
+                    setting._FORCESTOPING.set()
+                    return False
+                Press(CheckIf(scn,"下钩"))
+                while 1:
+                    scn = ScreenShot()
+                    fish = CheckIf(scn, "鱼", [[1387,184,48,397]])
+                    stick = CheckIf(scn, "上半部分", [[1387,184,48,397]])
+                    fishing = CheckIf(scn, "下钩",[[1339,667,138,136]])
+                    if fishing:
+                        if fish and stick:
+                            logger.info(f"发现鱼 {fish} {stick}")
+                            if (fish[1]<(stick[1]+42)):
+                                dist = stick[1]-fish[1]+42
+                                time = round(dist/303*1200)+200
+                                time = time//2
+                                logger.info(f"距离{dist} 推测时间{time}")
+                                DeviceShell(f"input swipe 1409 736 1409 736 {time}")
+                            elif fish[1]>(stick[1]+42):
+                                dist = fish[1]-stick[1]-42
+                                time = round(dist/303*867)//1000
+                                time = time-0.2 if time>0.2 else 0
+                                logger.info(f"等待{time}")
+                                Sleep(time)
+                        else:
+                            Press(fishing)
         @register
         def handle_menu(scn):
             if CheckIf(scn, "任务图标"):
@@ -1270,17 +1354,21 @@ def Factory():
         def handle_dungeon_select(scn):
             if CheckIf(scn,"勘察无尽"):
                 logger.info("关卡选择.")
-                BasicQuestSelect()
+                try:
+                    BasicQuestSelect()
+                except Exception as e:
+                    logger.info(e)
+                    return False
                 return True
             return False
         @register
         def handle_start_dungeon(scn):
             if pos:=(CheckIf(scn, "开始挑战")):
                 logger.info("开始挑战!")
-                if setting._GREEN_BOOK or (setting._GREEN_BOOK_FINAL and (NL_in_game_counter == DEFAULTWAVE)):
+                if setting._GREEN_BOOK or (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
                     if setting._GREEN_BOOK:
                         logger.info("因为面板设置, 使用了绿书.")
-                    if (setting._GREEN_BOOK_FINAL and (NL_in_game_counter == DEFAULTWAVE)):
+                    if (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
                         logger.info("因为面板设置, 这是最后一小局, 使用了绿书.")
                     Press([620,520])
                     Sleep(0.5)
@@ -1315,19 +1403,17 @@ def Factory():
             return False
         @register
         def handle_countinue_in_game(scn):
-            nonlocal NL_in_game_counter
-            nonlocal NL_start_time
-            nonlocal NL_total_time
+            nonlocal runtimeContext
             if (CheckIf(scn, "继续挑战")):
-                logger.info(f"已完成第{NL_in_game_counter}小局!")
-                if NL_in_game_counter + 1 <= DEFAULTWAVE:
-                    cost_time = time.time()-NL_start_time
-                    NL_total_time = NL_total_time + cost_time
-                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{NL_total_time:.2f}秒.")
-                    NL_start_time = time.time()
+                logger.info(f"已完成第{runtimeContext._IN_GAME_COUNTER}小局!")
+                if runtimeContext._IN_GAME_COUNTER + 1 <= DEFAULTWAVE:
+                    cost_time = time.time()-runtimeContext._START_TIME
+                    runtimeContext._TOTAL_TIME = runtimeContext._TOTAL_TIME + cost_time
+                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.")
+                    runtimeContext._START_TIME = time.time()
 
-                    NL_in_game_counter +=1
-                    logger.info(f"开始第{NL_in_game_counter}小局...")
+                    runtimeContext._IN_GAME_COUNTER +=1
+                    logger.info(f"开始第{runtimeContext._IN_GAME_COUNTER}小局...")
                     while Press(CheckIf(ScreenShot(), "继续挑战")):
                         1
                 else:
@@ -1335,53 +1421,46 @@ def Factory():
                     while Press(CheckIf(ScreenShot(), "撤离")):
                         Sleep(1)
 
-                    NL_in_game_counter = 1
+                    runtimeContext._IN_GAME_COUNTER = 1
                     Sleep(2)
                 return True
             return False
         @register
         def handle_continue(scn):
-            nonlocal NL_game_prepare
-            nonlocal NL_total_time
-            nonlocal NL_game_counter
-            nonlocal NL_start_time
+            nonlocal runtimeContext
             if pos:=(CheckIf(scn, "再次进行")):
                 Press(pos)
                 runtimeContext._CASTED_Q = False
-                cost_time = time.time()-NL_start_time
+                cost_time = time.time()-runtimeContext._START_TIME
                 if cost_time > 10:
-                    NL_game_counter += 1
-                    NL_game_prepare = False
-                    NL_total_time = NL_total_time + cost_time
-                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{NL_total_time:.2f}秒.")
-                    logger.info(f"第{NL_game_counter}次{setting._FARM_TYPE+setting._FARM_LVL}完成.\n累计用时{NL_total_time:.2f}秒.", extra={"summary": True})
-                    NL_start_time = time.time()
+                    runtimeContext._GAME_COUNTER += 1
+                    runtimeContext._GAME_PREPARE = False
+                    runtimeContext._TOTAL_TIME = runtimeContext._TOTAL_TIME + cost_time
+                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.")
+                    logger.info(f"第{runtimeContext._GAME_COUNTER}次{setting._FARM_TYPE+setting._FARM_LVL}完成.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.", extra={"summary": True})
+                    runtimeContext._START_TIME = time.time()
                 return True
             return False
         @register
         def handle_in_dungeon(scn):
-            nonlocal NL_game_prepare
-            nonlocal NL_start_time
-            nonlocal NL_game_counter
+            nonlocal runtimeContext
             if CheckIfInDungeon(scn):
-                if not NL_game_prepare:
+                if not runtimeContext._GAME_PREPARE:
                     Sleep(1)
                     if resetMove():
-                        NL_game_prepare = True
+                        runtimeContext._GAME_PREPARE = True
                     else:
                         logger.info("尚未支持的地图, 重新进本.")
-                        NL_game_counter -= 1
+                        runtimeContext._GAME_COUNTER -= 1
                         QuitDungeon()
                         return True
             
-                if time.time() - NL_start_time > setting._RESTART_INTERVAL:
+                if time.time() - runtimeContext._START_TIME > setting._RESTART_INTERVAL:
                     logger.info("时间太久了, 重来吧")
-                    NL_start_time = time.time()
+                    runtimeContext._START_TIME = time.time()
                     QuitDungeon()
                     return True
-                CastQOnce()
-                CastESpell()
-                CastQSpell()
+                CastSpell()
                 return True
             return False
         @register
@@ -1433,7 +1512,7 @@ def Factory():
                         pass
                     check_counter = 0
                     continue
-            if check_counter >= 20:
+            if check_counter >= runtimeContext._MAXRETRYLIMIT:
                 logger.error("超过尝试次数, 重启游戏.")
                 try:
                     restartGame()
