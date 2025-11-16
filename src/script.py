@@ -835,8 +835,8 @@ def Factory():
                 if setting._CAST_E_PRINT:
                     logger.info(f"Q技能释放计时器: 当前次数:{(time.time() - CastQSpell.last_cast_time):.2f}")
                 Press([1205,779])
+                Sleep(3)
                 if CheckIfInDungeon():
-                    Sleep(3)
                     Press([1203,631])
                     Sleep(1)
                     Press([1097,658])
@@ -1129,6 +1129,8 @@ def Factory():
                             return False
                         for i in range(setting._RESTART_INTERVAL):
                             if CheckIf(ScreenShot(), "血清100%",[[69,227,153,108]]):
+                                break
+                            elif CheckIf(ScreenShot(), "可前往撤离点"):
                                 break
                             else:
                                 CastSpell()
@@ -1485,7 +1487,7 @@ def Factory():
             if setting._FARM_TYPE == "钓鱼":
                 while 1:
                     scn = ScreenShot()
-                    if not CheckIfInDungeon():
+                    if (not CheckIfInDungeon(scn)) and (not CheckIf(scn,"悠闲钓鱼_钓到鱼了")):
                         logger.info("不在钓鱼界面. 自动退出.")
                         setting._FORCESTOPING.set()
                         return False
