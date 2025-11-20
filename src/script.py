@@ -883,19 +883,26 @@ def Factory():
             return True
         else:
             return False
-    def QuickUnlock():
-        Sleep(1)
-        scn = ScreenShot()
-        if Press(CheckIf(scn,"启动升降机")):
-            Sleep(14)
-            return True
-        if Press(CheckIf(scn,"操作")) or Press(CheckIf(scn,"暴露引信")):
-            Sleep(2)
+    def TryQuickUnlock(tries=1, fallback = None, args= None):
+        unlock = False
+        for _ in range(tries):
+            Sleep(1)
             scn = ScreenShot()
-            if Press(CheckIf(scn,"快速破解")) or Press(CheckIf(scn,"快速破解_云")):
+            if Press(CheckIf(scn,"启动升降机")):
+                Sleep(14)
+                unlock = True
+                break
+            if Press(CheckIf(scn,"操作")) or Press(CheckIf(scn,"暴露引信")):
                 Sleep(2)
-                return True
-        return False
+                scn = ScreenShot()
+                if Press(CheckIf(scn,"快速破解")) or Press(CheckIf(scn,"快速破解_云")):
+                    Sleep(2)
+                    unlock = True
+                    break
+            if (not unlock) and fallback:
+                fallback(args)
+        
+        return unlock
     def InverseDistanceWeighting(r,g,b):
         d1 = (r-64)**2+(g-40)**2+(b-18)**2
         d2 = (r-67)**2+(g-79)**2+(b-58)**2
@@ -1099,7 +1106,7 @@ def Factory():
                     Sleep(1)
                     if CheckIf(ScreenShot(), "保护目标", [[745,175,126,92]]): # 电梯
                         GoForward(round((3-4/60)*1000))
-                        if QuickUnlock():
+                        if TryQuickUnlock():
                             GoForward(round((18+18/60)*1000))
                             return True
                         return False
@@ -1116,7 +1123,7 @@ def Factory():
                 if CheckIf(ScreenShot(), "保护目标", [[693,212,109,110]]):
                     GoForward(9600)
                     GoLeft(400)
-                    if QuickUnlock():
+                    if TryQuickUnlock():
                         GoRight(3250)
                         GoForward(3000)
                         GoLeft(1800)
@@ -1158,7 +1165,7 @@ def Factory():
                 Sleep(3)
                 if CheckIf(ScreenShot(), "保护目标", [[394,297,169,149]]):
                     GoLeft(2800)
-                    if QuickUnlock():
+                    if TryQuickUnlock():
                         GoRight(800)
                         return True
                 return False
@@ -1176,7 +1183,7 @@ def Factory():
                 Sleep(0.5)
                 Press([1359,478])
                 GoBack(500)
-                if QuickUnlock():
+                if TryQuickUnlock():
                     GoLeft(4700)
                     GoBack(2000)
                     DeviceShell("input swipe 800 450 800 850 500")
@@ -1199,14 +1206,7 @@ def Factory():
                     GoForward(round((3.5+16/60)*1000))
                     DoubleJump()
                     GoForward(1000)
-                    unlock = False
-                    for _ in range(5):
-                        if QuickUnlock():
-                            unlock = True
-                            break
-                        else:
-                            GoBack(50)
-                    if unlock:
+                    if TryQuickUnlock(5, GoBack, 50):
                         if not ResetPosition():
                             return False
                         GoLeft(round((4-2/60)*1000))
@@ -1281,13 +1281,7 @@ def Factory():
                     if not AUTOCalibration_P([800,450], "操作_营救"):
                         return False
                     GoForward(1000)
-                    for _ in range(5):
-                        if QuickUnlock():
-                            unlock = True
-                            break
-                        else:
-                            GoForward(100)
-                    if not unlock:
+                    if not TryQuickUnlock(5, GoForward, 100):
                         return False
                     
                     DeviceShell("input swipe 800 450 750 450 500")
@@ -1296,13 +1290,7 @@ def Factory():
                     DeviceShell("input swipe 800 450 1300 450 500")
                     AUTOCalibration_P([800,450],None,[[597,213,344,380]])
                     GoForward(2000)
-                    for _ in range(5):
-                        if QuickUnlock():
-                            unlock = True
-                            break
-                        else:
-                            GoForward(100)
-                    if not unlock:
+                    if not TryQuickUnlock(5, GoForward, 100):
                         return False
                     Sleep(2)
                     if CheckIf(ScreenShot(),"护送目标前往撤离点"):
@@ -1324,13 +1312,7 @@ def Factory():
                     if not AUTOCalibration_P([800,450], None,[[567,226,317,409]]):
                         return False
                     GoForward(7000)
-                    for _ in range(5):
-                        if QuickUnlock():
-                            unlock = True
-                            break
-                        else:
-                            GoForward(100)
-                    if not unlock:
+                    if not TryQuickUnlock(5, GoForward, 100):
                         return False
                     if CheckIf(ScreenShot(),"护送目标前往撤离点"):
                         logger.info("人质已救出!")
@@ -1351,13 +1333,7 @@ def Factory():
                     if not AUTOCalibration_P([800,450], None,[[640,241,437,450]]):
                         return False
                     GoForward(2500)
-                    for _ in range(20):
-                        if QuickUnlock():
-                            unlock = True
-                            break
-                        else:
-                            GoForward(100)
-                    if not unlock:
+                    if not TryQuickUnlock(5, GoForward, 100):
                         return False
                     Sleep(2)
                     if CheckIf(ScreenShot(),"护送目标前往撤离点"):
@@ -1383,13 +1359,7 @@ def Factory():
                         GoBack(500)
                         DeviceShell("input swipe 1528 450 800 450 500")
                         AUTOCalibration_P([730,450])
-                        for _ in range(20):
-                            if QuickUnlock():
-                                unlock = True
-                                break
-                            else:
-                                GoForward(100)
-                        if not unlock:
+                        if not TryQuickUnlock(5, GoForward, 100):
                             return False
                         Sleep(2)
                         if CheckIf(ScreenShot(),"护送目标前往撤离点"):
