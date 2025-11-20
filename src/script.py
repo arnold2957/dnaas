@@ -1253,7 +1253,7 @@ def Factory():
                                         return True
                                 continue
                 return False
-            case "mod强化60" | "mod强化60测试":
+            case "mod强化60" | "mod强化60(测试)":
                 def finalRoom():
                     AUTOCalibration_P([800,450])
                     CastSpearRush(3)
@@ -1371,7 +1371,7 @@ def Factory():
                         return finalRoom()
                     
                     logger.info("第四个房间")
-                    if setting._FARM_TYPE+setting._FARM_LVL == "mod强化60测试":
+                    if setting._FARM_TYPE+setting._FARM_LVL == "mod强化60(测试)":
                         DeviceShell("input swipe 1528 450 600 450 500")
                         AUTOCalibration_P([800,450])
                         GoLeft(2300)
