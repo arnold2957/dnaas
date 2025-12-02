@@ -1778,7 +1778,7 @@ def Factory():
                         runtimeContext._ROUGE_new_battle_reset = True
                         # SaveDebugImage()
                     else:
-                        for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域"]:
+                        for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域","肉鸽_最后boss"]:
                             if pos:=CheckIf(scn, stage):
                                 if Press(CheckIf(scn, "肉鸽_进入下一个区域")) or Press(CheckIf(scn,"肉鸽_休整按钮")):
                                     break
@@ -1805,7 +1805,7 @@ def Factory():
                 if not locals_dict['_has_forwarded']:
                     GoForward(5000)
                     locals_dict['_has_forwarded'] = True
-                for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域"]:
+                for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域", "肉鸽_最后boss"]:
                     if pos:=CheckIf(scn, stage):
                         if Press(CheckIf(scn, "肉鸽_进入下一个区域")):
                             locals_dict['_has_forwarded'] = False
