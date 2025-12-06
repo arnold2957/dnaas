@@ -871,22 +871,21 @@ def Factory():
                 Sleep(2)
                 runtimeContext._CASTED_Q = True
     def CastNothingTodo():
-        if not setting._CAST_Q_ONCE:
-            if not setting._CAST_Q_ABILITY:
-                if not setting._CAST_E_ABILITY:
-                    if not hasattr(CastNothingTodo, 'last_cast_time'):
-                        CastNothingTodo.last_cast_time = 0
-                    if time.time() - CastNothingTodo.last_cast_time > 20:
-                        logger.info("呃, 什么都不干可不行, 会被踢出去的.")
-                        for _ in range(3):
-                            random.choice([
-                                lambda: Press([1203,631]),
-                                lambda: Press([1097,658]), 
-                                lambda: DoubleJump()
-                            ])()
-                            Sleep(1)
+        if not setting._CAST_Q_ABILITY:
+            if not setting._CAST_E_ABILITY:
+                if not hasattr(CastNothingTodo, 'last_cast_time'):
+                    CastNothingTodo.last_cast_time = 0
+                if time.time() - CastNothingTodo.last_cast_time > 20:
+                    logger.info("呃, 什么都不干可不行, 会被踢出去的.")
+                    for _ in range(3):
+                        random.choice([
+                            lambda: Press([1203,631]),
+                            lambda: Press([1097,658]), 
+                            lambda: DoubleJump()
+                        ])()
+                        Sleep(1)
 
-                        CastNothingTodo.last_cast_time = time.time()
+                    CastNothingTodo.last_cast_time = time.time()
     def CastSpell():
         CastNothingTodo()
         CastQOnce()
@@ -1761,6 +1760,10 @@ def Factory():
                 runtimeContext._ROUGE_battle_finished = False
                 return True
             return False
+        def Rouge_CheckNextStage(scn):
+            if Press(CheckIf(scn, "肉鸽_进入下一个区域")) or Press(CheckIf(scn,"肉鸽_休整按钮")) or Press(CheckIf(scn,"肉鸽_高危战斗")):
+                return True
+            return False
         @register('rouge')
         def handle_rouge_explore(scn):
             if CheckIf(scn, "肉鸽_继续探索", [[1370,62,195,59]]):
@@ -1780,15 +1783,14 @@ def Factory():
                     else:
                         for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域","肉鸽_最后boss"]:
                             if pos:=CheckIf(scn, stage):
-                                if Press(CheckIf(scn, "肉鸽_进入下一个区域")) or Press(CheckIf(scn,"肉鸽_休整按钮")):
+                                if Rouge_CheckNextStage(scn):
                                     break
                                 if (abs(pos[0]-800)>30) or (abs(pos[1]-450)>30):
                                     AUTOCalibration_P([800,450],stage)
                                 if runtimeContext._ROUGE_tick_counter % 5 == 0:
                                     DoubleJump()
                                 GoForward(1000)
-                                screen = ScreenShot()
-                                if Press(CheckIf(screen, "肉鸽_进入下一个区域")) or Press(CheckIf(screen,"肉鸽_休整按钮")):
+                                if Rouge_CheckNextStage(ScreenShot()):
                                     break
                                 break
                 return True
@@ -1807,7 +1809,7 @@ def Factory():
                     locals_dict['_has_forwarded'] = True
                 for stage in ["肉鸽_boss战", "肉鸽_下一个战斗区域","肉鸽_下一个困难战斗区域", "肉鸽_最后boss"]:
                     if pos:=CheckIf(scn, stage):
-                        if Press(CheckIf(scn, "肉鸽_进入下一个区域")):
+                        if Rouge_CheckNextStage(scn):
                             locals_dict['_has_forwarded'] = False
                             break
                         if (abs(pos[0]-800)>30) or (abs(pos[1]-450)>30):
@@ -1815,7 +1817,7 @@ def Factory():
                         if runtimeContext._ROUGE_tick_counter % 5 == 0:
                             DoubleJump()
                         GoForward(1000)
-                        if Press(CheckIf(ScreenShot(), "肉鸽_进入下一个区域")):
+                        if Rouge_CheckNextStage(ScreenShot()):
                             locals_dict['_has_forwarded'] = False
                             break
                         break
