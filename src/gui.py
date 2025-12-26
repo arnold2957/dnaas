@@ -4,13 +4,14 @@ import os
 import logging
 from script import *
 from utils import *
+import i18n
 
 ############################################
 class ConfigPanelApp(tk.Toplevel):
     def __init__(self, master_controller, version, msg_queue):
         self.URL = "https://space.bilibili.com/8843896"
-        self.TITLE = f"二重螺旋自动刷怪 v{version} @德德Dellyla(B站)"
-        self.INTRODUCTION = f"遇到问题? 请访问:\n{self.URL}"
+        self.TITLE = i18n.get_text("title_format", version)
+        self.INTRODUCTION = i18n.get_text("intro_format", self.URL)
 
         RegisterQueueHandler()
         StartLogListener()
@@ -43,15 +44,18 @@ class ConfigPanelApp(tk.Toplevel):
         self.config = LoadConfigFromFile()
         for attr_name, var_type, var_config_name, var_default_value in CONFIG_VAR_LIST:
             if issubclass(var_type, tk.Variable):
-                setattr(self, attr_name, var_type(value = self.config.get(var_config_name,var_default_value)))
+                val = self.config.get(var_config_name,var_default_value)
+                # Translate logic values to English for UI
+                if var_config_name in ["_FARM_TYPE", "_FARM_LVL", "_FARM_EXTRA"]:
+                    val = i18n.to_english(val)
+                setattr(self, attr_name, var_type(value = val))
             else:
                 setattr(self, attr_name, var_type(self.config.get(var_config_name,var_default_value)))
           
-
         self.create_widgets()        
 
         logger.info("**********************************")
-        logger.info(f"当前版本: {version}")
+        logger.info(f"Version: {version}")
         logger.info(self.INTRODUCTION, extra={"summary": True})
         logger.info("**********************************")
 
@@ -63,7 +67,11 @@ class ConfigPanelApp(tk.Toplevel):
 
         for attr_name, var_type, var_config_name, _ in CONFIG_VAR_LIST:
             if issubclass(var_type, tk.Variable):
-                self.config[var_config_name] = getattr(self, attr_name).get()
+                val = getattr(self, attr_name).get()
+                # Translate UI English values back to Chinese for Config
+                if var_config_name in ["_FARM_TYPE", "_FARM_LVL", "_FARM_EXTRA"]:
+                    val = i18n.to_chinese(val)
+                self.config[var_config_name] = val
         
         SaveConfigToFile(self.config)
 
@@ -108,7 +116,7 @@ class ConfigPanelApp(tk.Toplevel):
         adb_entry.grid_remove()
         def selectADB_PATH():
             path = filedialog.askopenfilename(
-                title="选择ADB执行文件",
+                title=i18n.get_text("select_adb_file"),
                 filetypes=[("Executable", "*.exe"), ("All files", "*.*")]
             )
             if path:
@@ -117,7 +125,7 @@ class ConfigPanelApp(tk.Toplevel):
         # 浏览按钮
         self.adb_path_change_button = ttk.Button(
             frame_row,
-            text="修改",
+            text=i18n.get_text("change"),
             command=selectADB_PATH,
             width = 5,
         )
@@ -125,13 +133,13 @@ class ConfigPanelApp(tk.Toplevel):
         # 初始化标签状态
         def update_adb_status(*args):
             if self.emu_path_var.get():
-                self.adb_status_label.config(text="已设置模拟器", foreground="green")
+                self.adb_status_label.config(text=i18n.get_text("emulator_set"), foreground="green")
             else:
-                self.adb_status_label.config(text="未设置模拟器", foreground="red")
+                self.adb_status_label.config(text=i18n.get_text("emulator_not_set"), foreground="red")
         
         self.emu_path_var.trace_add("write", lambda *args: update_adb_status())
         update_adb_status()  # 初始调用
-        ttk.Label(frame_row, text="端口:").grid(row=0, column=2, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("port")).grid(row=0, column=2, sticky=tk.W, pady=5)
         vcmd_non_neg = self.register(lambda x: ((x=="")or(x.isdigit())))
         self.adb_port_entry = ttk.Entry(frame_row,
                                         textvariable=self.adb_port_var,
@@ -141,7 +149,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.adb_port_entry.grid(row=0, column=3)
         self.button_save_adb_port = ttk.Button(
             frame_row,
-            text="保存",
+            text=i18n.get_text("save"),
             command = self.save_config,
             width=5
             )
@@ -153,15 +161,22 @@ class ConfigPanelApp(tk.Toplevel):
 
         # 地下城目标
         def UpdateLvlCombo(*args):
-            if self.farm_type_var.get() in DUNGEON_TARGETS.keys():
-                self.farm_target_lvl_combo['value'] = list(DUNGEON_TARGETS[self.farm_type_var.get()].keys())
-                if self.farm_target_lvl_combo['values'] and (self.farm_lvl_var.get() not in self.farm_target_lvl_combo['values']):
+            farm_type_cn = i18n.to_chinese(self.farm_type_var.get())
+            if farm_type_cn in DUNGEON_TARGETS.keys():
+                lvl_keys = list(DUNGEON_TARGETS[farm_type_cn].keys())
+                self.farm_target_lvl_combo['values'] = [i18n.to_english(k) for k in lvl_keys]
+                
+                current_lvl_en = self.farm_lvl_var.get()
+                if self.farm_target_lvl_combo['values'] and (current_lvl_en not in self.farm_target_lvl_combo['values']):
                     self.farm_lvl_var.set(self.farm_target_lvl_combo['values'][0])
+
         row_counter += 1
         frame_row = ttk.Frame(self.main_frame)
         frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5)  # 第二行框架
-        ttk.Label(frame_row, text="地下城目标:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.farm_target_combo = ttk.Combobox(frame_row, textvariable=self.farm_type_var, values=list(DUNGEON_TARGETS.keys()), state="readonly")
+        ttk.Label(frame_row, text=i18n.get_text("dungeon_target")).grid(row=0, column=0, sticky=tk.W, pady=5)
+        
+        target_values = [i18n.to_english(k) for k in DUNGEON_TARGETS.keys()]
+        self.farm_target_combo = ttk.Combobox(frame_row, textvariable=self.farm_type_var, values=target_values, state="readonly")
         self.farm_target_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
         self.farm_target_combo.bind("<<ComboboxSelected>>", lambda e: self.save_config())
         self.farm_type_var.trace('w', UpdateLvlCombo)
@@ -169,13 +184,15 @@ class ConfigPanelApp(tk.Toplevel):
         row_counter += 1
         frame_row = ttk.Frame(self.main_frame)
         frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5)  # 第二行框架
-        ttk.Label(frame_row, text="等级:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("level")).grid(row=0, column=0, sticky=tk.W, pady=5)
         self.farm_target_lvl_combo = ttk.Combobox(frame_row, textvariable=self.farm_lvl_var, state="readonly", width=7)
         self.farm_target_lvl_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
         self.farm_target_lvl_combo.bind("<<ComboboxSelected>>", lambda e: self.save_config())
         UpdateLvlCombo()
-        ttk.Label(frame_row, text="额外参数:").grid(row=0, column=2, sticky=tk.W, pady=5)
-        self.farm_target_extra_combo = ttk.Combobox(frame_row, textvariable=self.farm_extra_var,values=DUNGEON_EXTRA, state="readonly", width=7)
+        ttk.Label(frame_row, text=i18n.get_text("extra_params")).grid(row=0, column=2, sticky=tk.W, pady=5)
+        
+        extra_values = [i18n.to_english(k) for k in DUNGEON_EXTRA]
+        self.farm_target_extra_combo = ttk.Combobox(frame_row, textvariable=self.farm_extra_var,values=extra_values, state="readonly", width=7)
         self.farm_target_extra_combo.grid(row=0, column=3, sticky=(tk.W, tk.E), pady=5)
         self.farm_target_extra_combo.bind("<<ComboboxSelected>>", lambda e: self.save_config())
 
@@ -187,7 +204,7 @@ class ConfigPanelApp(tk.Toplevel):
         row_counter += 1
         frame_row = ttk.Frame(self.main_frame)
         frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5)
-        ttk.Label(frame_row, text="每轮次超时检查(秒):").grid(row=0, column=1, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("timeout_check")).grid(row=0, column=1, sticky=tk.W, pady=5)
         self.restart_intervel_entry = ttk.Entry(frame_row,
                                              textvariable=self.restart_intervel_var,
                                              validate="key",
@@ -196,7 +213,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.restart_intervel_entry.grid(row=0, column=2)
         self.button_save_restart_intervel = ttk.Button(
             frame_row,
-            text="保存",
+            text=i18n.get_text("save"),
             command = self.save_config,
             width=4
             )
@@ -210,12 +227,12 @@ class ConfigPanelApp(tk.Toplevel):
         self.round_custom_check = ttk.Checkbutton(
             frame_row,
             variable=self.round_custom_var,
-            text="使用自定义轮数",
+            text=i18n.get_text("use_custom_rounds"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
         self.round_custom_check.grid(row=0, column=0)
-        ttk.Label(frame_row, text=" | 轮数:").grid(row=0, column=1, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("rounds")).grid(row=0, column=1, sticky=tk.W, pady=5)
         self.round_custom_time_entry = ttk.Entry(frame_row,
                                              textvariable=self.round_custom_time_var,
                                              validate="key",
@@ -224,7 +241,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.round_custom_time_entry.grid(row=0, column=2)
         self.button_save_round_custom = ttk.Button(
             frame_row,
-            text="保存",
+            text=i18n.get_text("save"),
             command = self.save_config,
             width=4
             )
@@ -238,7 +255,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.use_green_book_check = ttk.Checkbutton(
             frame_row,
             variable=self.green_book_var,
-            text="使用绿书",
+            text=i18n.get_text("use_green_book"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
@@ -247,12 +264,11 @@ class ConfigPanelApp(tk.Toplevel):
         self.use_green_book_final_check = ttk.Checkbutton(
             frame_row,
             variable=self.green_book_final_var,
-            text="只在最后一轮使用绿书",
+            text=i18n.get_text("use_green_book_final"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
         self.use_green_book_final_check.grid(row=0, column=1)
-
 
 
         # 分割线.
@@ -267,7 +283,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_Q_once_check = ttk.Checkbutton(
             frame_row,
             variable=self.cast_Q_once_var,
-            text="(仅一次)开局后释放Q",
+            text=i18n.get_text("cast_q_once"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
@@ -281,12 +297,12 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_Q_check = ttk.Checkbutton(
             frame_row,
             variable=self.cast_q_var,
-            text="自动放Q技能",
+            text=i18n.get_text("auto_cast_q"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
         self.cast_Q_check.grid(row=0, column=0)
-        ttk.Label(frame_row, text=" | 间隔(秒):").grid(row=0, column=1, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("interval_s")).grid(row=0, column=1, sticky=tk.W, pady=5)
         self.cast_Q_intervel_entry = ttk.Entry(frame_row,
                                              textvariable=self.cast_Q_intervel_var,
                                              validate="key",
@@ -295,7 +311,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_Q_intervel_entry.grid(row=0, column=2)
         self.button_save_cast_Q_intervel = ttk.Button(
             frame_row,
-            text="保存",
+            text=i18n.get_text("save"),
             command = self.save_config,
             width=4
             )
@@ -309,12 +325,12 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_E_check = ttk.Checkbutton(
             frame_row,
             variable=self.cast_e_var,
-            text="自动放E技能",
+            text=i18n.get_text("auto_cast_e"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
         self.cast_E_check.grid(row=0, column=0)
-        ttk.Label(frame_row, text=" | 间隔(秒):").grid(row=0, column=1, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("interval_s")).grid(row=0, column=1, sticky=tk.W, pady=5)
         self.cast_intervel_entry = ttk.Entry(frame_row,
                                              textvariable=self.cast_intervel_var,
                                              validate="key",
@@ -323,7 +339,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_intervel_entry.grid(row=0, column=2)
         self.button_save_cast_intervel = ttk.Button(
             frame_row,
-            text="保存",
+            text=i18n.get_text("save"),
             command = self.save_config,
             width=4
             )
@@ -337,7 +353,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.cast_E_print_check = ttk.Checkbutton(
             frame_row,
             variable=self.cast_e_print_var,
-            text="打印内部技能释放计时器",
+            text=i18n.get_text("print_timers"),
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
@@ -373,7 +389,7 @@ class ConfigPanelApp(tk.Toplevel):
             self.toggle_start_stop()
         self.start_stop_btn = ttk.Button(
             button_frame,
-            text="脚本, 启动!",
+            text=i18n.get_text("start_script"),
             command=btn_command,
             style='start.TButton',
         )
@@ -418,7 +434,7 @@ class ConfigPanelApp(tk.Toplevel):
 
     def toggle_start_stop(self):
         if not self.quest_active:
-            self.start_stop_btn.config(text="停止")
+            self.start_stop_btn.config(text=i18n.get_text("stop_script"))
             self.set_controls_state(tk.DISABLED)
             setting = FarmConfig()
             config = LoadConfigFromFile()
@@ -431,7 +447,7 @@ class ConfigPanelApp(tk.Toplevel):
             self.msg_queue.put(('stop_quest', None))
 
     def finishingcallback(self):
-        logger.info("已停止.")
-        self.start_stop_btn.config(text="脚本, 启动!")
+        logger.info(i18n.get_text("stopped"))
+        self.start_stop_btn.config(text=i18n.get_text("start_script"))
         self.set_controls_state(tk.NORMAL)
         self.quest_active = False

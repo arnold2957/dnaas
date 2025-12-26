@@ -2,6 +2,7 @@ from gui import *
 import argparse
 import queue
 import threading
+import i18n
 
 __version__ = '1.1.1' 
 # 
@@ -44,16 +45,19 @@ class AppController(tk.Tk):
                     Farm = Factory()
                     self.quest_threading = Thread(target=Farm,args=(self.quest_setting,))
                     self.quest_threading.start()
-                    logger.info(f'启动任务\"{self.quest_setting._FARM_TYPE+self.quest_setting._FARM_LVL}(额外设定={self.quest_setting._FARM_EXTRA})\"...')
+                    
+                    task_name = i18n.to_english(self.quest_setting._FARM_TYPE) + i18n.to_english(self.quest_setting._FARM_LVL)
+                    extra = i18n.to_english(self.quest_setting._FARM_EXTRA)
+                    logger.info(i18n.get_text("starting_task", task_name, extra))
 
                 case 'stop_quest':
-                    logger.info('停止任务...')
+                    logger.info(i18n.get_text("stopping_task"))
                     if hasattr(self, 'quest_threading') and self.quest_threading.is_alive():
                         if hasattr(self.quest_setting, '_FORCESTOPING'):
                             self.quest_setting._FORCESTOPING.set()
                 
                 case 'turn_to_7000G':
-                    logger.info('开始要钱...')
+                    logger.info(i18n.get_text("starting_money"))
                     self.quest_setting._FARMTARGET = "7000G"
                     self.quest_setting._COUNTERDUNG = 0
                     while 1:
@@ -112,7 +116,7 @@ def HeadlessActive(config_path,msg_queue):
     msg_queue.put(('start_quest', setting))
 
 
-    logger.info(f"二重螺旋自动刷怪 v{__version__} @德德Dellyla(B站)")
+    logger.info(i18n.get_text("title_format", __version__))
 
 if __name__ == "__main__":
     main()

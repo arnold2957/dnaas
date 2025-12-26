@@ -9,6 +9,7 @@ import cv2
 import time
 import multiprocessing
 import numpy as np
+import i18n
 
 # 基础模块包括:
 # LOGGER. 将输入写入到logger.txt文件中.
@@ -145,10 +146,10 @@ def LoadJson(path):
         else:
             return {}   
     except json.JSONDecodeError:
-        logger.error(f"错误: 无法解析 {path}。将使用默认配置。")
+        logger.error(i18n.get_text("error_parse_config", path))
         return {}
     except Exception as e:
-        logger.error(f"错误: 加载配置时发生错误: {e}。将使用默认配置。")
+        logger.error(i18n.get_text("error_load_config", e))
         return {}
 def LoadImage(path):
     try:
@@ -158,7 +159,7 @@ def LoadImage(path):
         # 手动抛出异常
             raise ValueError(f"[OpenCV 错误] 图片加载失败，路径可能不存在或图片损坏: {path}")
     except Exception as e:
-        logger.error(f"加载图片失败: {str(e)}")
+        logger.error(i18n.get_text("error_load_image", str(e)))
         return None
     return img
 ############################################
@@ -167,10 +168,10 @@ def SaveConfigToFile(config_data):
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config_data, f, ensure_ascii=False, indent=4)
-        logger.info("配置已保存。")
+        logger.info(i18n.get_text("config_saved"))
         return True
     except Exception as e:
-        logger.error(f"保存配置时发生错误: {e}")
+        logger.error(i18n.get_text("error_save_config", e))
         return False
 def LoadConfigFromFile(config_file_path = CONFIG_FILE):
     if config_file_path == None:
@@ -205,7 +206,7 @@ def BuildQuestReflection():
         return quest_reflect_map
     
     except KeyError as e:
-        raise KeyError(f"不存在'questName'属性: {e}.")
+        raise KeyError(i18n.get_text("error_attr_not_found", 'questName', e))
     except json.JSONDecodeError as e:
         logger.info(f"Error at line {e.lineno}, column {e.colno}: {e.msg}")
         logger.info(f"Problematic text: {e.doc[e.pos-30:e.pos+30]}")  # 显示错误上下文

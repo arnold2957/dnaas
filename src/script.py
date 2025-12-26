@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 import subprocess
 from utils import *
+import i18n
 import random
 from threading import Thread,Event
 from pathlib import Path
@@ -96,7 +97,7 @@ class FarmQuest:
 def KillAdb(setting : FarmConfig):
     adb_path = GetADBPath(setting)
     try:
-        logger.info(f"正在检查并关闭adb...")
+        logger.info(i18n.get_text("checking_closing_adb"))
         # Windows 系统使用 taskkill 命令
         if os.name == 'nt':
             subprocess.run(
@@ -122,15 +123,15 @@ def KillAdb(setting : FarmConfig):
                 stderr=subprocess.DEVNULL,
                 check=False
             )
-        logger.info(f"已尝试终止adb")
+        logger.info(i18n.get_text("adb_terminated"))
     except Exception as e:
-        logger.error(f"终止模拟器进程时出错: {str(e)}")
+        logger.error(i18n.get_text("error_terminate_emulator", str(e)))
 
 def KillEmulator(setting : FarmConfig):
     emulator_name = os.path.basename(setting._EMUPATH)
     emulator_SVC = "MuMuVMMSVC.exe"
     try:
-        logger.info(f"正在检查并关闭已运行的模拟器实例{emulator_name}...")
+        logger.info(i18n.get_text("checking_closing_emulator", emulator_name))
         # Windows 系统使用 taskkill 命令
         if os.name == 'nt':
             subprocess.run(
@@ -166,17 +167,17 @@ def KillEmulator(setting : FarmConfig):
                 stderr=subprocess.DEVNULL,
                 check=False
             )
-        logger.info(f"已尝试终止模拟器进程: {emulator_name}")
+        logger.info(i18n.get_text("emulator_terminated", emulator_name))
     except Exception as e:
-        logger.error(f"终止模拟器进程时出错: {str(e)}")
+        logger.error(i18n.get_text("error_terminate_emulator", str(e)))
 def StartEmulator(setting):
     hd_player_path = setting._EMUPATH
     if not os.path.exists(hd_player_path):
-        logger.error(f"模拟器启动程序不存在: {hd_player_path}")
+        logger.error(i18n.get_text("emulator_executable_not_found", hd_player_path))
         return False
 
     try:
-        logger.info(f"启动模拟器: {hd_player_path}")
+        logger.info(i18n.get_text("starting_emulator", hd_player_path))
         subprocess.Popen(
             hd_player_path,
             shell=True,
@@ -184,10 +185,10 @@ def StartEmulator(setting):
             stderr=subprocess.DEVNULL,
             cwd=os.path.dirname(hd_player_path))
     except Exception as e:
-        logger.error(f"启动模拟器失败: {str(e)}")
+        logger.error(i18n.get_text("error_start_emulator", str(e)))
         return False
 
-    logger.info("等待模拟器启动...")
+    logger.info(i18n.get_text("waiting_emulator_start"))
     time.sleep(15)
 def GetADBPath(setting):
     adb_path = setting._EMUPATH
@@ -195,7 +196,7 @@ def GetADBPath(setting):
     adb_path = adb_path.replace("MuMuPlayer.exe", "adb.exe") # mumu
     adb_path = adb_path.replace("MuMuNxDevice.exe", "adb.exe") # mumu
     if not os.path.exists(adb_path):
-        logger.error(f"adb程序序不存在: {adb_path}")
+        logger.error(i18n.get_text("adb_not_found", adb_path))
         return None
 
     return adb_path
@@ -210,59 +211,59 @@ def CheckRestartConnectADB(setting: FarmConfig):
     adb_path = GetADBPath(setting)
 
     for attempt in range(MAXRETRIES):
-        logger.info(f"-----------------------\n开始尝试连接adb. 次数:{attempt + 1}/{MAXRETRIES}...")
+        logger.info(i18n.get_text("attempting_connect_adb", attempt + 1, MAXRETRIES))
 
         if attempt == 3:
-            logger.info(f"失败次数过多, 尝试关闭adb.")
+            logger.info(i18n.get_text("too_many_failures_close_adb"))
             KillAdb(setting)
 
             # 我们不起手就关, 但是如果2次链接还是尝试失败, 那就触发一次强制重启.
 
         try:
-            logger.info("检查adb服务...")
+            logger.info(i18n.get_text("checking_adb_service"))
             result = CMDLine(f"\"{adb_path}\" devices")
             logger.debug(f"adb链接返回(输出信息):{result.stdout}")
             logger.debug(f"adb链接返回(错误信息):{result.stderr}")
 
             if ("daemon not running" in result.stderr) or ("offline" in result.stdout):
-                logger.info("adb服务未启动!\n启动adb服务...")
+                logger.info(i18n.get_text("adb_service_not_started"))
                 CMDLine(f"\"{adb_path}\" kill-server")
                 CMDLine(f"\"{adb_path}\" start-server")
                 time.sleep(2)
 
-            logger.debug(f"尝试连接到adb...")
+            logger.debug(i18n.get_text("attempting_connect_adb_debug"))
             result = CMDLine(f"\"{adb_path}\" connect 127.0.0.1:{setting._ADBPORT}")
             logger.debug(f"adb链接返回(输出信息):{result.stdout}")
             logger.debug(f"adb链接返回(错误信息):{result.stderr}")
 
             if result.returncode == 0 and ("connected" in result.stdout or "already" in result.stdout):
-                logger.info("成功连接到模拟器")
+                logger.info(i18n.get_text("connected_emulator"))
                 break
             if ("refused" in result.stderr) or ("cannot connect" in result.stdout):
-                logger.info("模拟器未运行，尝试启动...")
+                logger.info(i18n.get_text("emulator_not_running_start"))
                 StartEmulator(setting)
-                logger.info("模拟器(应该)启动完毕.")
-                logger.info("尝试连接到模拟器...")
+                logger.info(i18n.get_text("emulator_started"))
+                logger.info(i18n.get_text("attempting_connect_emulator"))
                 result = CMDLine(f"\"{adb_path}\" connect 127.0.0.1:{setting._ADBPORT}")
                 if result.returncode == 0 and ("connected" in result.stdout or "already" in result.stdout):
-                    logger.info("成功连接到模拟器")
+                    logger.info(i18n.get_text("connected_emulator"))
                     break
-                logger.info("无法连接. 检查adb端口.")
+                logger.info(i18n.get_text("cannot_connect_check_port"))
 
-            logger.info(f"连接失败: {result.stderr.strip()}")
+            logger.info(i18n.get_text("connection_failed", result.stderr.strip()))
             time.sleep(2)
             # KillEmulator(setting)
             KillAdb(setting)
             time.sleep(2)
         except Exception as e:
-            logger.error(f"重启ADB服务时出错: {e}")
+            logger.error(i18n.get_text("error_restart_adb", e))
             time.sleep(2)
             # KillEmulator(setting)
             KillAdb(setting)
             time.sleep(2)
             return None
     else:
-        logger.info("达到最大重试次数，连接失败")
+        logger.info(i18n.get_text("max_retries_reached"))
         return None
 
     try:
@@ -273,10 +274,10 @@ def CheckRestartConnectADB(setting: FarmConfig):
         target_device = f"127.0.0.1:{setting._ADBPORT}"
         for device in devices:
             if device.serial == target_device:
-                logger.info(f"成功获取设备对象: {device.serial}")
+                logger.info(i18n.get_text("got_device_object", device.serial))
                 return device
     except Exception as e:
-        logger.error(f"获取ADB设备时出错: {e}")
+        logger.error(i18n.get_text("error_get_adb_device", e))
 
     return None
 ##################################################################
@@ -448,7 +449,7 @@ def Factory():
             try:
                 if not completed.wait(timeout:=7):
                     # 线程超时未完成
-                    logger.warning(f"ADB命令执行超时: {cmdStr}")
+                    logger.warning(i18n.get_text("adb_command_timeout", cmdStr))
                     raise TimeoutError(f"ADB命令在{timeout}秒内未完成")
 
                 if exception is not None:
@@ -456,8 +457,8 @@ def Factory():
 
                 return result
             except (TimeoutError, RuntimeError, ConnectionResetError, cv2.error) as e:
-                logger.warning(f"ADB操作失败 ({type(e).__name__}): {e}")
-                logger.info("尝试重启ADB服务...")
+                logger.warning(i18n.get_text("adb_operation_failed", type(e).__name__, e))
+                logger.info(i18n.get_text("attempting_restart_adb"))
 
                 ResetADBDevice()
                 time.sleep(1)
@@ -465,7 +466,7 @@ def Factory():
                 continue
             except Exception as e:
                 # 非预期异常直接抛出
-                logger.error(f"非预期的ADB异常: {type(e).__name__}: {e}")
+                logger.error(i18n.get_text("unexpected_adb_exception", type(e).__name__, e))
                 raise
 
     def Sleep(t=1):
@@ -478,17 +479,17 @@ def Factory():
                 screenshot_np = np.frombuffer(screenshot, dtype=np.uint8)
 
                 if screenshot_np.size == 0:
-                    logger.error("截图数据为空！")
+                    logger.error(i18n.get_text("screenshot_empty"))
                     raise RuntimeError("截图数据为空")
 
                 image = cv2.imdecode(screenshot_np, cv2.IMREAD_COLOR)
 
                 if image is None:
-                    logger.error("OpenCV解码失败：图像数据损坏")
+                    logger.error(i18n.get_text("opencv_decode_failed"))
                     raise RuntimeError("图像解码失败")
 
                 if image.shape != (900, 1600, 3):  # OpenCV格式为(高, 宽, 通道)
-                    logger.error(f"截图尺寸异常! 当前{image.shape}, 应为(1600,900). 请检查并修改模拟器分辨率!")
+                    logger.error(i18n.get_text("screenshot_size_abnormal", image.shape))
                     Sleep(5)
                     raise ValueError("截图尺寸异常")
 
@@ -497,7 +498,7 @@ def Factory():
             except Exception as e:
                 logger.debug(f"{e}")
                 if isinstance(e, (AttributeError,RuntimeError, ConnectionResetError, cv2.error)):
-                    logger.info("adb重启中...")
+                    logger.info(i18n.get_text("adb_restarting"))
                     ResetADBDevice()
     def CheckIf(screenImage, shortPathOfTarget, roi = None, outputMatchResult = False):
         template = LoadTemplateImage(shortPathOfTarget)
@@ -514,7 +515,7 @@ def Factory():
                 logger.error(f"{e}")
                 logger.info(f"{e}")
                 if isinstance(e, (cv2.error)):
-                    logger.info(f"cv2异常.")
+                    logger.info(i18n.get_text("cv2_exception"))
                     # timestamp = datetime.now().strftime("cv2_%Y%m%d_%H%M%S")  # 格式：20230825_153045
                     # file_path = os.path.join(LOGS_FOLDER_NAME, f"{timestamp}.png")
                     # cv2.imwrite(file_path, ScreenShot())
@@ -527,13 +528,13 @@ def Factory():
             cv2.rectangle(screenshot, max_loc, (max_loc[0] + template.shape[1], max_loc[1] + template.shape[0]), (0, 255, 0), 2)
             cv2.imwrite(f"DEBUG_matched_{t}.png", screenshot)
 
-        logger.debug(f"搜索到疑似{shortPathOfTarget}, 匹配程度:{max_val*100:.2f}%")
+        logger.debug(i18n.get_text("found_suspected", shortPathOfTarget, max_val*100))
         if max_val < threshold:
-            logger.debug("匹配程度不足阈值.")
+            logger.debug(i18n.get_text("match_below_threshold"))
             return None
         if max_val<=0.9:
-            logger.debug(f"警告: {shortPathOfTarget}的匹配程度超过了{threshold*100:.0f}%但不足90%")
-        logger.debug(f"{shortPathOfTarget}匹配成功!")
+            logger.debug(i18n.get_text("match_warning", shortPathOfTarget, threshold*100))
+        logger.debug(i18n.get_text("matched_successfully", shortPathOfTarget))
         pos=[max_loc[0] + template.shape[1]//2, max_loc[1] + template.shape[0]//2]
         return pos
     def CheckIf_MultiRect(screenImage, shortPathOfTarget):
@@ -566,10 +567,10 @@ def Factory():
 
         threshold = 0.80
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
-        logger.debug(f"搜索到疑似{shortPathOfTarget}, 匹配程度:{max_val*100:.2f}%")
+        logger.debug(i18n.get_text("found_suspected", shortPathOfTarget, max_val*100))
         if max_val >= threshold:
             if max_val<=0.9:
-                logger.debug(f"警告: {shortPathOfTarget}的匹配程度超过了80%但不足90%")
+                logger.debug(i18n.get_text("match_warning", shortPathOfTarget, 80))
 
             cropped = screenshot[max_loc[1]:max_loc[1]+template.shape[0], max_loc[0]:max_loc[0]+template.shape[1]]
             SIZE = 15 # size of cursor 光标就是这么大
@@ -584,7 +585,7 @@ def Factory():
             gray1 = cv2.cvtColor(midimg_scn, cv2.COLOR_BGR2GRAY)
             gray2 = cv2.cvtColor(miding_ptn, cv2.COLOR_BGR2GRAY)
             mean_diff = cv2.absdiff(gray1, gray2).mean()/255
-            logger.debug(f"中心匹配检查:{mean_diff:.2f}")
+            logger.debug(i18n.get_text("center_match_check", mean_diff))
 
             if mean_diff<0.2:
                 return True
@@ -649,19 +650,19 @@ def Factory():
                                     if (waittime:=(time.time()-t)) < 0.1:
                                         Sleep(0.1-waittime)
                                 else:
-                                    logger.debug(f"错误: 非法的目标{p}.")
+                                    logger.debug(i18n.get_text("error_invalid_target", p))
                                     setting._FORCESTOPING.set()
                                     return None
                     else:
                         if isinstance(fallback, str):
                             pressTarget(fallback)
                         else:
-                            logger.debug("错误: 非法的目标.")
+                            logger.debug(i18n.get_text("error_invalid_target", "None"))
                             setting._FORCESTOPING.set()
                             return None
                 Sleep(waitTime) # and wait
 
-            logger.info(f"{runtimeContext._MAXRETRYLIMIT}次截图依旧没有找到目标{targetPattern}, 疑似卡死. 重启游戏.")
+            logger.info(i18n.get_text("screenshot_target_not_found_restart", runtimeContext._MAXRETRYLIMIT, targetPattern))
             Sleep()
             restartGame()
             return None # restartGame会抛出异常 所以直接返回none就行了
@@ -718,10 +719,10 @@ def Factory():
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 格式：20230825_153045
             file_path = os.path.join(LOGS_FOLDER_NAME, f"{timestamp}.png")
             cv2.imwrite(file_path, ScreenShot())
-            logger.info(f"重启前截图已保存在{file_path}中.\n请发送该截图和log文件以便进行bug反馈.")
+            logger.info(i18n.get_text("pre_restart_screenshot_saved", file_path))
         else:
             runtimeContext._CRASHCOUNTER +=1
-            logger.info(f"跳过了重启前截图. 暂时不处理模拟器重启的问题.")
+            logger.info(i18n.get_text("skipped_screenshot"))
             # logger.info(f"跳过了重启前截图.\n崩溃计数器: {runtimeContext._CRASHCOUNTER}\n崩溃计数器超过5次后会重启模拟器.")
             # if runtimeContext._CRASHCOUNTER > 5:
             #     runtimeContext._CRASHCOUNTER = 0
@@ -732,23 +733,23 @@ def Factory():
         packageList = DeviceShell("pm list packages -3")
         if "com.hero.dna.gf.yun.game" in packageList:
             package_name = "com.hero.dna.gf.yun.game"
-            logger.info("有云游戏, 优先启动云游戏.")
+            logger.info(i18n.get_text("cloud_game_detected"))
             waittime = 25
         elif "com.panstudio.gplay.duetnightabyss.arpg.global" in packageList:
             package_name = "com.panstudio.gplay.duetnightabyss.arpg.global"
-            logger.info("是港澳台/国际服.")
+            logger.info(i18n.get_text("global_server_detected"))
             waittime = 40
         elif "com.hero.dna.gf" in packageList:
             package_name = "com.hero.dna.gf" # "com.hero.dna.gf.yun.game"
-            logger.info("准备启动游戏.")
+            logger.info(i18n.get_text("preparing_start_game"))
             waittime = 40
         else:
-            logger.info("你究竟再用什么版本再玩? 重启不了, 告辞.")
+            logger.info(i18n.get_text("unknown_version_restart_failed"))
             return
         mainAct = DeviceShell(f"cmd package resolve-activity --brief {package_name}").strip().split('\n')[-1]
         DeviceShell(f"am force-stop {package_name}")
         Sleep(2)
-        logger.info("二重螺旋, 启动!")
+        logger.info(i18n.get_text("game_start"))
         logger.debug(DeviceShell(f"am start -n {mainAct}"))
         Sleep(waittime)
         raise RestartSignal()
@@ -761,11 +762,11 @@ def Factory():
                     op()
                 return
             except RestartSignal:
-                logger.info("任务进度重置中...")
+                logger.info(i18n.get_text("task_progress_reset"))
                 continue
     ##################################################################
     def ResetPosition():
-        logger.info("开始复位.")
+        logger.info(i18n.get_text("starting_reset"))
         try:
             FindCoordsOrElseExecuteFallbackAndWait(["放弃挑战","放弃挑战_云","设置"],['indungeon','indungeon_cloud'],1)
             FindCoordsOrElseExecuteFallbackAndWait("其他设置","设置",1)
@@ -828,7 +829,7 @@ def Factory():
             FindCoordsOrElseExecuteFallbackAndWait(["任务图标","放弃挑战","放弃挑战_云","再次进行"],['indungeon','indungeon_cloud'],2)
             scn = ScreenShot()
             if CheckIf(scn,"任务图标"):
-                logger.info("奇怪, 怎么已经退出了.")
+                logger.info(i18n.get_text("strange_already_exited"))
                 return
             if CheckIf(scn,"放弃挑战") or CheckIf(scn,"放弃挑战_云"):
                 Press(FindCoordsOrElseExecuteFallbackAndWait("确定",["放弃挑战","放弃挑战_云"],2))
@@ -848,7 +849,7 @@ def Factory():
 
         if setting._CAST_E_ABILITY:
             if setting._CAST_E_PRINT:
-                logger.info(f"E技能释放计时器: 当前次数:{time.time() - CastESpell.last_cast_time}")
+                logger.info(i18n.get_text("e_skill_timer", time.time() - CastESpell.last_cast_time))
             if time.time() - CastESpell.last_cast_time > setting._CAST_E_INTERVAL:
                 Press([1086,797])
                 CastESpell.last_cast_time = time.time()
@@ -859,7 +860,7 @@ def Factory():
         if setting._CAST_Q_ABILITY:
             if time.time() - CastQSpell.last_cast_time > setting._CAST_Q_INTERVAL:
                 if setting._CAST_E_PRINT:
-                    logger.info(f"Q技能释放计时器: 当前次数:{(time.time() - CastQSpell.last_cast_time):.2f}")
+                    logger.info(i18n.get_text("q_skill_timer", time.time() - CastQSpell.last_cast_time))
                 Press([1205,779])
                 Sleep(3)
                 if CheckIfInDungeon():
@@ -879,7 +880,7 @@ def Factory():
                 if not hasattr(CastNothingTodo, 'last_cast_time'):
                     CastNothingTodo.last_cast_time = 0
                 if time.time() - CastNothingTodo.last_cast_time > 20:
-                    logger.info("呃, 什么都不干可不行, 会被踢出去的.")
+                    logger.info(i18n.get_text("doing_nothing_kick"))
                     for _ in range(3):
                         random.choice([
                             lambda: Press([1203,631]),
@@ -906,7 +907,7 @@ def Factory():
             scn = ScreenShot()
 
         if CheckIf(scn,'indungeon',[[0,0,125,125]]) or CheckIf(scn,'indungeon_cloud',[[0,0,125,125]]):
-            logger.debug("已在副本中.")
+            logger.debug(i18n.get_text("already_in_dungeon"))
             return True
         else:
             return False
@@ -938,9 +939,9 @@ def Factory():
         Sa = 1/d1 + 1/d2
         Sb = 1/d3 + 1/d4
         k = Sa/(Sa+Sb)
-        logger.info(f"定位结果: {k:.2f}.")
+        logger.info(i18n.get_text("positioning_result", k))
         if (k >= 0.48) and (k <= 0.52):
-            logger.info(f"如果你多次看见本条信息, 请向作者报告你的画面设置和是否是云游戏.")
+            logger.info(i18n.get_text("report_graphics_settings"))
         if k > 0.5:
             return "A"
         else:
@@ -949,7 +950,7 @@ def Factory():
         for _ in range(50):
             pos = CheckIf(ScreenShot(),"保护目标",roi) or CheckIf(ScreenShot(),"撤离点",roi)
             if not pos:
-                logger.info("自动校正取消:不在目标范围内.")
+                logger.info(i18n.get_text("auto_calibration_cancelled"))
                 return False
             if abs(pos[0]-800) <= 10:
                 return True
@@ -988,7 +989,7 @@ def Factory():
     ##################################################################
     def BasicQuestSelect():
         if setting._FARM_TYPE == "开密函":
-            logger.info("错误: 开密函模式无法自动选择任务. 取消执行.")
+            logger.info(i18n.get_text("error_open_letter_mode"))
             setting._FORCESTOPING.set()
             return
         elif setting._FARM_TYPE == "迷津":
@@ -1011,7 +1012,7 @@ def Factory():
                     select = 2
                 else:
                     select = int(setting._FARM_EXTRA)
-                logger.info(f"由于额外参数为\"{setting._FARM_EXTRA}\",刷取对象为{mat_elem[select]}")
+                logger.info(i18n.get_text("extra_param_farming_target", setting._FARM_EXTRA, mat_elem[select]))
                 FindCoordsOrElseExecuteFallbackAndWait(mat_elem[select],[1020+83*select,778],1)
         elif setting._FARM_TYPE == "夜航手册":
             FindCoordsOrElseExecuteFallbackAndWait("前往","夜航手册",1)
@@ -1507,7 +1508,7 @@ def Factory():
 
         if setting._ROUND_CUSTOM_ACTIVE:
             DEFAULTWAVE = setting._ROUND_CUSTOM_TIME
-            logger.info(f"已设置自定义轮数, 每次将刷取{DEFAULTWAVE}轮次.")
+            logger.info(i18n.get_text("custom_rounds_set", DEFAULTWAVE))
         else:
             match setting._FARM_TYPE+setting._FARM_LVL:
                 case "皎皎币60" | "皎皎币70":
@@ -1518,7 +1519,8 @@ def Factory():
                     DEFAULTWAVE = 15
                 case _:
                     DEFAULTWAVE = 1
-            logger.info(f"{setting._FARM_TYPE+setting._FARM_LVL}的默认局内轮次数为{DEFAULTWAVE}.")
+            task_name = i18n.to_english(setting._FARM_TYPE) + i18n.to_english(setting._FARM_LVL)
+            logger.info(i18n.get_text("default_rounds", task_name, DEFAULTWAVE))
 
         ########################################
         handlers = []
@@ -1535,14 +1537,14 @@ def Factory():
         @register()
         def handle_relogin(scn):
             if Press(CheckIf(scn,"重新连接")):
-                logger.info("重新连接.")
+                logger.info(i18n.get_text("reconnecting"))
                 Sleep(1)
                 return True
             return False
         @register()
         def handle_login(scn):
             if Press(CheckIf(scn, "点击进入游戏")) or Press(CheckIf(scn, "点击进入游戏_云")):
-                logger.info("点击进入游戏.")
+                logger.info(i18n.get_text("click_enter_game"))
                 Sleep(20)
                 return True
             return False
@@ -1555,45 +1557,45 @@ def Factory():
                 while 1:
                     scn = ScreenShot()
                     if setting._FORCESTOPING.is_set():
-                        logger.info("检测到停止请求, 结束钓鱼处理.")
+                        logger.info(i18n.get_text("stop_fishing_detected"))
                         return True
                     Press([802,741])
                     if CheckIf(scn, "悠闲钓鱼_无鱼"):
-                        logger.info("检测到无鱼提示，停止钓鱼。")
+                        logger.info(i18n.get_text("no_fish_detected"))
                         setting._FORCESTOPING.set()
                         return False
                     if (not CheckIfInDungeon(scn)) and (not CheckIf(scn,"悠闲钓鱼_钓到鱼了")) and (not CheckIf(scn,"悠闲钓鱼_新图鉴")):
                         Press([802,741])
                         if quit_counter % 10 == 0:
-                            logger.info(f"不在钓鱼界面.({quit_counter // 10})")
+                            logger.info(i18n.get_text("not_in_fishing_ui", quit_counter // 10))
                         quit_counter +=1
                         Sleep(1)
                     Press(CheckIf(scn,"悠闲钓鱼_收杆"))
                     Press(CheckIf(scn,"悠闲钓鱼_授鱼以鱼"))
                     if (CheckIf(scn,"悠闲钓鱼_钓到鱼了")) or (CheckIf(scn,"悠闲钓鱼_新图鉴")):
-                        logger.info("钓到鱼了!")
+                        logger.info(i18n.get_text("caught_fish"))
                         Press([802,741])
                         Sleep(3)
                         counter+=1
-                        logger.info(f"钓到了{counter}条鱼, 累计用时{(time.time()-t):.2f}秒.", extra={"summary": True})                    
+                        logger.info(i18n.get_text("caught_fish_stat", counter, time.time()-t), extra={"summary": True})
         @register('normal')
         def handle_dig(scn):
             if CheckIf(scn,"勘察", [[57,279,43,24]]):
-                logger.info("检测到勘察任务, 强制结束.")
+                logger.info(i18n.get_text("exploration_task_detected"))
                 setting._FORCESTOPING.set()
                 return True
             return False
         @register('normal')
         def handle_coop_accept(scn):
             if Press(CheckIf(scn,"多人联机_同意", [[1514,67,64,64]])):
-                logger.info("检测到多人联机的请求, 同意请求.")
+                logger.info(i18n.get_text("coop_request_detected"))
                 setting._FORCESTOPING.set()
                 return True
             return False
         @register()
         def handle_menu(scn):
             if CheckIf(scn, "任务图标"):
-                logger.info("任务菜单.")
+                logger.info(i18n.get_text("quest_menu"))
                 Press([63,27])
                 Sleep(2)
                 return True
@@ -1601,7 +1603,7 @@ def Factory():
         @register()
         def handle_quest(scn):
             if Press(CheckIf(scn, "历练")):
-                logger.info("历练.")
+                logger.info(i18n.get_text("training"))
                 Sleep(1)
                 return True
             return False
@@ -1614,7 +1616,7 @@ def Factory():
         @register()
         def handle_dungeon_select(scn):
             if CheckIf(scn,"勘察无尽"):
-                logger.info("关卡选择.")
+                logger.info(i18n.get_text("level_selection"))
                 try:
                     BasicQuestSelect()
                 except Exception as e:
@@ -1625,12 +1627,12 @@ def Factory():
         @register('normal')
         def handle_start_dungeon(scn):
             if pos:=(CheckIf(scn, "开始挑战")):
-                logger.info("开始挑战!")
+                logger.info(i18n.get_text("start_challenge"))
                 if setting._GREEN_BOOK or (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
                     if setting._GREEN_BOOK:
-                        logger.info("因为面板设置, 使用了绿书.")
+                        logger.info(i18n.get_text("green_book_used"))
                     if (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
-                        logger.info("因为面板设置, 这是最后一小局, 使用了绿书.")
+                        logger.info(i18n.get_text("green_book_used_final"))
                     Press([620,520])
                     Sleep(0.5)
                 Press(pos)
@@ -1659,26 +1661,26 @@ def Factory():
             seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
             if (seconds_since_midnight>=4*3600) and (seconds_since_midnight<=6*3600):
                 if Press(CheckIf(scn,"小月卡")):
-                    logger.info("已领取小月卡.")
+                    logger.info(i18n.get_text("monthly_card_collected"))
                     return True
             return False
         @register('normal')
         def handle_countinue_in_game(scn):
             nonlocal runtimeContext
             if (CheckIf(scn, "继续挑战")):
-                logger.info(f"已完成第{runtimeContext._IN_GAME_COUNTER}小局!")
+                logger.info(i18n.get_text("round_completed", runtimeContext._IN_GAME_COUNTER))
                 if runtimeContext._IN_GAME_COUNTER + 1 <= DEFAULTWAVE:
                     cost_time = time.time()-runtimeContext._START_TIME
                     runtimeContext._TOTAL_TIME = runtimeContext._TOTAL_TIME + cost_time
-                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.")
+                    logger.info(i18n.get_text("round_time_stat", cost_time, runtimeContext._TOTAL_TIME))
                     runtimeContext._START_TIME = time.time()
 
                     runtimeContext._IN_GAME_COUNTER +=1
-                    logger.info(f"开始第{runtimeContext._IN_GAME_COUNTER}小局...")
+                    logger.info(i18n.get_text("starting_round", runtimeContext._IN_GAME_COUNTER))
                     while Press(CheckIf(ScreenShot(), "继续挑战")):
                         1
                 else:
-                    logger.info("已完成目标小局, 撤离")
+                    logger.info(i18n.get_text("target_rounds_completed"))
                     for _ in range(50):
                         if Press(CheckIf(ScreenShot(), "撤离")):
                             break
@@ -1699,8 +1701,9 @@ def Factory():
                     runtimeContext._GAME_COUNTER += 1
                     runtimeContext._GAME_PREPARE = False
                     runtimeContext._TOTAL_TIME = runtimeContext._TOTAL_TIME + cost_time
-                    logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.")
-                    logger.info(f"第{runtimeContext._GAME_COUNTER}次{setting._FARM_TYPE+setting._FARM_LVL}完成.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.", extra={"summary": True})
+                    logger.info(i18n.get_text("round_time_stat", cost_time, runtimeContext._TOTAL_TIME))
+                    task_name = i18n.to_english(setting._FARM_TYPE) + i18n.to_english(setting._FARM_LVL)
+                    logger.info(i18n.get_text("game_completed_stat", runtimeContext._GAME_COUNTER, task_name, runtimeContext._TOTAL_TIME), extra={"summary": True})
                     runtimeContext._START_TIME = time.time()
                 return True
             return False
@@ -1713,13 +1716,13 @@ def Factory():
                     if resetMove():
                         runtimeContext._GAME_PREPARE = True
                     else:
-                        logger.info("尚未支持的地图, 重新进本.")
+                        logger.info(i18n.get_text("unsupported_map"))
                         # SaveDebugImage()
                         QuitDungeon()
                         return True
 
                 if time.time() - runtimeContext._START_TIME > setting._RESTART_INTERVAL:
-                    logger.info("时间太久了, 重来吧")
+                    logger.info(i18n.get_text("took_too_long_restart"))
                     runtimeContext._START_TIME = time.time()
                     QuitDungeon()
                     return True
@@ -1750,7 +1753,7 @@ def Factory():
         def handle_rouge_RESTART(scn):
             if runtimeContext._ROUGE_tick_counter > 3600:
                 runtimeContext._ROUGE_tick_counter = 0
-                logger.info("时间太久了, 重来吧")
+                logger.info(i18n.get_text("took_too_long_restart"))
                 runtimeContext._START_TIME = time.time()
                 restartGame()
                 return True
@@ -1851,7 +1854,7 @@ def Factory():
                 Sleep(2)
                 runtimeContext._ROUGE_tick_counter = 0
                 runtimeContext._ROUGE_finish_counter += 1
-                logger.info(f"已完成{runtimeContext._ROUGE_finish_counter}次肉鸽.", extra={"summary": True})
+                logger.info(i18n.get_text("rogue_runs_completed", runtimeContext._ROUGE_finish_counter), extra={"summary": True})
                 pass
         @register('rouge')
         def handle_rouge_begining_relic(scn):
@@ -1866,7 +1869,7 @@ def Factory():
             return False
         ########################################
         if setting._FARM_TYPE == "迷津":
-            logger.info("使用肉鸽模式.")
+            logger.info(i18n.get_text("rogue_mode_used"))
             active_handlers = handlers_rouge
         else:
             active_handlers = handlers
@@ -1899,11 +1902,11 @@ def Factory():
                 logger.debug(f"round time {round_time}")
 
             if check_counter < 5:
-                logger.debug(f"定位中, 尝试次数:{check_counter}/20")
+                logger.debug(i18n.get_text("positioning_attempt", check_counter))
             if check_counter >= 5:
-                logger.info(f"定位中, 尝试次数:{check_counter}/20")
+                logger.info(i18n.get_text("positioning_attempt", check_counter))
                 if ("dna" not in DeviceShell("dumpsys window | grep mCurrentFocus")) and ("duetnightabyss" not in DeviceShell("dumpsys window | grep mCurrentFocus")) :
-                    logger.info("游戏未启动, 尝试启动.")
+                    logger.info(i18n.get_text("game_not_running_start"))
                     try:
                         restartGame(skipScreenShot = True)
                         Press([1,1])
@@ -1912,7 +1915,7 @@ def Factory():
                     check_counter = 0
                     continue
             if check_counter >= runtimeContext._MAXRETRYLIMIT:
-                logger.error("超过尝试次数, 重启游戏.")
+                logger.error(i18n.get_text("max_attempts_restart"))
                 try:
                     restartGame()
                     Press([1,1])
