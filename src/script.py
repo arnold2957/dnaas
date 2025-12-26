@@ -38,7 +38,6 @@ CONFIG_VAR_LIST = [
             ["emu_path_var",                tk.StringVar,  "_EMUPATH",                   ""],
             ["adb_port_var",                tk.StringVar,  "_ADBPORT",                   16384],
             ["last_version",                tk.StringVar,  "LAST_VERSION",               ""],
-            ["latest_version",              tk.StringVar,  "LATEST_VERSION",             None],
 
             ["cast_e_var",                  tk.BooleanVar, "_CAST_E_ABILITY",            True],
             ["cast_intervel_var",           tk.IntVar,     "_CAST_E_INTERVAL",           7],

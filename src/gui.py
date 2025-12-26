@@ -3,7 +3,6 @@ from tkinter import ttk, scrolledtext, filedialog, messagebox
 import os
 import logging
 from script import *
-from auto_updater import *
 from utils import *
 
 ############################################
@@ -386,50 +385,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.start_stop_btn.grid(row=0, column=1, sticky='nsew', padx=5, pady= 26)
 
 
-        # 分割线
-        row_counter += 1
-        self.update_sep = ttk.Separator(self.main_frame, orient='horizontal')
-        self.update_sep.grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
-
-        #更新按钮
-        row_counter += 1
-        frame_row_update = tk.Frame(self.main_frame)
-        frame_row_update.grid(row=row_counter, column=0, sticky=tk.W)
-
-        self.find_update = ttk.Label(frame_row_update, text="发现新版本:",foreground="red")
-        self.find_update.grid(row=0, column=0, sticky=tk.W)
-
-        self.update_text = ttk.Label(frame_row_update, textvariable=self.latest_version,foreground="red")
-        self.update_text.grid(row=0, column=1, sticky=tk.W)
-
-        self.button_auto_download = ttk.Button(
-            frame_row_update,
-            text="自动下载",
-            width=7
-            )
-        self.button_auto_download.grid(row=0, column=2, sticky=tk.W, padx= 5)
-
-        def open_url():
-            url = os.path.join(self.URL, "releases")
-            if sys.platform == "win32":
-                os.startfile(url)
-            elif sys.platform == "darwin":
-                os.system(f"open {url}")
-            else:
-                os.system(f"xdg-open {url}")
-        self.button_manual_download = ttk.Button(
-            frame_row_update,
-            text="手动下载最新版",
-            command=open_url,
-            width=7
-            )
-        self.button_manual_download.grid(row=0, column=3, sticky=tk.W)
-
-        self.update_sep.grid_remove()
-        self.find_update.grid_remove()
-        self.update_text.grid_remove()
-        self.button_auto_download.grid_remove()
-        self.button_manual_download.grid_remove()
+        # 分割线（移除更新相关UI）
 
     def set_controls_state(self, state):
         self.button_and_entry = [
