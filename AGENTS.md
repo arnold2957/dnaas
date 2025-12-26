@@ -21,7 +21,6 @@ dnaas/
 │   ├── main.py           # Entry point with CLI arg parsing and app controller
 │   ├── gui.py            # GUI implementation and configuration panel
 │   ├── script.py         # Core farming and quest automation logic
-│   ├── auto_updater.py   # GitHub-based auto-update mechanism
 │   └── utils.py          # Utility functions and helpers
 ├── resources/
 │   └── quest/            # Quest data and configuration files
