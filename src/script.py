@@ -539,13 +539,25 @@ def Factory():
                     ResetADBDevice()
     def CheckIf(screenImage, shortPathOfTarget, roi = None, outputMatchResult = False):
         template = LoadTemplateImage(shortPathOfTarget)
+        if template is None:
+            return None
         if outputMatchResult:
             t = time.time()
             cv2.imwrite(f"DUBUG_beforeRoI_{t}.png", screenImage)
-        screenshot = screenImage.copy()
+        # Only copy if we need to modify the image (for ROI cutting or debug output)
+        # CutRoI modifies the image in-place, so we need a copy when ROI is used
+        if roi is not None:
+            screenshot = screenImage.copy()
+            search_area = CutRoI(screenshot, roi)
+        elif outputMatchResult:
+            # Need copy for debug output
+            screenshot = screenImage.copy()
+            search_area = screenshot
+        else:
+            # Use original image directly to avoid unnecessary copy
+            search_area = screenImage
         threshold = 0.80
         pos = None
-        search_area = CutRoI(screenshot, roi)
         try:
             result = cv2.matchTemplate(search_area, template, cv2.TM_CCOEFF_NORMED)
         except Exception as e:
@@ -561,6 +573,7 @@ def Factory():
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
         if outputMatchResult:
+            # screenshot variable exists if outputMatchResult is True (we created it above)
             cv2.imwrite(f"DEBUG_origin_{t}.png", screenshot)
             cv2.rectangle(screenshot, max_loc, (max_loc[0] + template.shape[1], max_loc[1] + template.shape[0]), (0, 255, 0), 2)
             cv2.imwrite(f"DEBUG_matched_{t}.png", screenshot)

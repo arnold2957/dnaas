@@ -11,6 +11,7 @@ import multiprocessing
 import numpy as np
 import i18n
 
+
 # 基础模块包括:
 # LOGGER. 将输入写入到logger.txt文件中.
 # CONFIG. 保存和写入设置.
@@ -215,10 +216,32 @@ def BuildQuestReflection():
         raise FileNotFoundError(f"{e}")
 ###########################################
 IMAGE_FOLDER = fr'resources/images/'
+_template_cache = {}  # Cache for template images to avoid reloading from disk
+
 def LoadTemplateImage(shortPathOfTarget):
+    """
+    Load template image with caching to improve performance.
+    Templates are loaded once and cached in memory.
+    """
+    # Check cache first
+    if shortPathOfTarget in _template_cache:
+        return _template_cache[shortPathOfTarget]
+    
+    # Load from disk if not cached
     logger.debug(f"加载{shortPathOfTarget}")
     pathOfTarget = ResourcePath(os.path.join(IMAGE_FOLDER + f"{shortPathOfTarget}.png"))
-    return LoadImage(pathOfTarget)
+    template = LoadImage(pathOfTarget)
+    
+    # Cache the template
+    if template is not None:
+        _template_cache[shortPathOfTarget] = template
+    
+    return template
+
+def clear_template_cache():
+    """Clear the template image cache (useful for memory management if needed)."""
+    global _template_cache
+    _template_cache.clear()
 ###########################################
 class Tooltip:
     def __init__(self, widget, text):
