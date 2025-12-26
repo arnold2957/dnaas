@@ -6,6 +6,7 @@ from enum import Enum
 from datetime import datetime
 import os
 import subprocess
+import re
 from utils import *
 import i18n
 import random
@@ -425,7 +426,7 @@ def Factory():
         if device := CheckRestartConnectADB(setting):
             setting._ADBDEVICE = device
             logger.info("ADB服务成功启动，设备已连接.")
-    def DeviceShell(cmdStr):
+    def DeviceShellRaw(cmdStr):
         logger.debug(f"DeviceShell {cmdStr}")
 
         while True:
@@ -468,6 +469,42 @@ def Factory():
                 # 非预期异常直接抛出
                 logger.error(i18n.get_text("unexpected_adb_exception", type(e).__name__, e))
                 raise
+
+    def DeviceShell(cmdStr):
+        """
+        Wrapper around DeviceShellRaw that randomizes coordinates for input commands.
+        Randomizes Press, GoLeft, GoRight, GoForward, GoBack, and DoubleJump by ±2 pixels.
+        """
+        # Check if this is an input tap or swipe command that should be randomized
+        if cmdStr.startswith("input tap "):
+            # Parse: input tap x y
+            match = re.match(r"input tap (\d+) (\d+)", cmdStr)
+            if match:
+                x, y = int(match.group(1)), int(match.group(2))
+                x_randomized = x + random.randint(-2, 2)
+                y_randomized = y + random.randint(-2, 2)
+                cmdStr = f"input tap {x_randomized} {y_randomized}"
+        
+        elif cmdStr.startswith("input swipe "):
+            # Parse: input swipe x1 y1 x2 y2 [duration]
+            match = re.match(r"input swipe (\d+) (\d+) (\d+) (\d+)(?: (\d+))?", cmdStr)
+            if match:
+                x1, y1, x2, y2 = int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4))
+                duration = match.group(5) if match.group(5) else None
+                
+                # Randomize all coordinates by ±2 pixels
+                x1_randomized = x1 + random.randint(-2, 2)
+                y1_randomized = y1 + random.randint(-2, 2)
+                x2_randomized = x2 + random.randint(-2, 2)
+                y2_randomized = y2 + random.randint(-2, 2)
+                
+                if duration:
+                    cmdStr = f"input swipe {x1_randomized} {y1_randomized} {x2_randomized} {y2_randomized} {duration}"
+                else:
+                    cmdStr = f"input swipe {x1_randomized} {y1_randomized} {x2_randomized} {y2_randomized}"
+        
+        # Pass the (possibly modified) command to the raw implementation
+        return DeviceShellRaw(cmdStr)
 
     def Sleep(t=1):
         time.sleep(t)
