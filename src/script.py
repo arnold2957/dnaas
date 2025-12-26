@@ -50,7 +50,12 @@ CONFIG_VAR_LIST = [
             ["cast_q_var",                  tk.BooleanVar, "_CAST_Q_ABILITY",            False],
             ["cast_Q_intervel_var",         tk.IntVar,     "_CAST_Q_INTERVAL",           25],
             ["cast_e_print_var",            tk.BooleanVar, "_CAST_E_PRINT",              False],
-            ["cast_Q_once_var",             tk.BooleanVar, "_CAST_Q_ONCE",              False]
+            ["cast_Q_once_var",             tk.BooleanVar, "_CAST_Q_ONCE",              False],
+            
+            ["movement_left_mult_var",      tk.DoubleVar,  "_MOVEMENT_LEFT_MULT",        1.02],
+            ["movement_right_mult_var",     tk.DoubleVar,  "_MOVEMENT_RIGHT_MULT",       1.02],
+            ["movement_forward_mult_var",   tk.DoubleVar,  "_MOVEMENT_FORWARD_MULT",     1.05],
+            ["movement_back_mult_var",      tk.DoubleVar,  "_MOVEMENT_BACK_MULT",        1.033]
             ]
 
 class FarmConfig:
@@ -833,11 +838,12 @@ def Factory():
             return False
     def GoLeft(time = 1000):
         # logger.info(f"往左走 剩余{time}")
+        mult = getattr(setting, '_MOVEMENT_LEFT_MULT', 1.02)
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 560 550 50 550 {int(1.02*time)}")
+            DeviceShell(f"input swipe 560 550 50 550 {int(mult*time)}")
         else:
-            DeviceShell(f"input swipe 560 550 50 550 {int(1.02*SPLIT)}")
+            DeviceShell(f"input swipe 560 550 50 550 {int(mult*SPLIT)}")
             GoLeft(time-SPLIT)
 
     def DoubleJump():
@@ -847,27 +853,30 @@ def Factory():
 
     def GoRight(time = 1000):
         # logger.info(f"往右走 剩余{time}")
+        mult = getattr(setting, '_MOVEMENT_RIGHT_MULT', 1.02)
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 50 550 560 550 {int(1.02*time)}")
+            DeviceShell(f"input swipe 50 550 560 550 {int(mult*time)}")
         else:
-            DeviceShell(f"input swipe 50 550 560 550 {int(1.02*SPLIT)}")
+            DeviceShell(f"input swipe 50 550 560 550 {int(mult*SPLIT)}")
             GoRight(time-SPLIT)
     def GoForward(time = 1000):
         # logger.info(f"往前走 剩余{time}")
+        mult = getattr(setting, '_MOVEMENT_FORWARD_MULT', 1.05)
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 500 610 500 400 {int(time*21/20)}")
+            DeviceShell(f"input swipe 500 610 500 400 {int(mult*time)}")
         else:
-            DeviceShell(f"input swipe 500 610 500 400 {int(SPLIT*21/20)}")
+            DeviceShell(f"input swipe 500 610 500 400 {int(mult*SPLIT)}")
             GoForward(time-SPLIT)
     def GoBack(time = 1000):
         # logger.info(f"往后走 剩余{time}")
+        mult = getattr(setting, '_MOVEMENT_BACK_MULT', 1.033)
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 500 400 500 710 {int(time*31/30)}")
+            DeviceShell(f"input swipe 500 400 500 710 {int(mult*time)}")
         else:
-            DeviceShell(f"input swipe 500 400 500 710 {int(SPLIT*31/30)}")
+            DeviceShell(f"input swipe 500 400 500 710 {int(mult*SPLIT)}")
             GoBack(time-SPLIT)
     def Dodge(time = 1):
         for _ in range(time):

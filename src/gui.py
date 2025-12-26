@@ -141,6 +141,7 @@ class ConfigPanelApp(tk.Toplevel):
         update_adb_status()  # 初始调用
         ttk.Label(frame_row, text=i18n.get_text("port")).grid(row=0, column=2, sticky=tk.W, pady=5)
         vcmd_non_neg = self.register(lambda x: ((x=="")or(x.isdigit())))
+        vcmd_float = self.register(lambda x: ((x=="")or(x.replace('.','',1).isdigit())))
         self.adb_port_entry = ttk.Entry(frame_row,
                                         textvariable=self.adb_port_var,
                                         validate="key",
@@ -345,6 +346,58 @@ class ConfigPanelApp(tk.Toplevel):
             )
         self.button_save_cast_intervel.grid(row=0, column=3)
 
+        # Movement Sensitivity Settings
+        row_counter += 1
+        ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
+        
+        row_counter += 1
+        frame_row = ttk.Frame(self.main_frame)
+        frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5)
+        ttk.Label(frame_row, text=i18n.get_text("movement_sensitivity"), font=("微软雅黑", 9, "bold")).grid(row=0, column=0, columnspan=4, sticky=tk.W, pady=5)
+        
+        row_counter += 1
+        frame_row = ttk.Frame(self.main_frame)
+        frame_row.grid(row=row_counter, column=0, sticky="ew", pady=2)
+        ttk.Label(frame_row, text=i18n.get_text("movement_left") + " (default: 1.02)").grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
+        self.movement_left_mult_entry = ttk.Entry(frame_row,
+                                             textvariable=self.movement_left_mult_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_float, '%P'),
+                                             width=8)
+        self.movement_left_mult_entry.grid(row=0, column=1, padx=5)
+        ttk.Label(frame_row, text=i18n.get_text("movement_right") + " (default: 1.02)").grid(row=0, column=2, sticky=tk.W, pady=2, padx=5)
+        self.movement_right_mult_entry = ttk.Entry(frame_row,
+                                             textvariable=self.movement_right_mult_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_float, '%P'),
+                                             width=8)
+        self.movement_right_mult_entry.grid(row=0, column=3, padx=5)
+        self.button_save_movement = ttk.Button(
+            frame_row,
+            text=i18n.get_text("save"),
+            command = self.save_config,
+            width=4
+            )
+        self.button_save_movement.grid(row=0, column=4, padx=5)
+        
+        row_counter += 1
+        frame_row = ttk.Frame(self.main_frame)
+        frame_row.grid(row=row_counter, column=0, sticky="ew", pady=2)
+        ttk.Label(frame_row, text=i18n.get_text("movement_forward") + " (default: 1.05)").grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
+        self.movement_forward_mult_entry = ttk.Entry(frame_row,
+                                             textvariable=self.movement_forward_mult_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_float, '%P'),
+                                             width=8)
+        self.movement_forward_mult_entry.grid(row=0, column=1, padx=5)
+        ttk.Label(frame_row, text=i18n.get_text("movement_back") + " (default: 1.033)").grid(row=0, column=2, sticky=tk.W, pady=2, padx=5)
+        self.movement_back_mult_entry = ttk.Entry(frame_row,
+                                             textvariable=self.movement_back_mult_var,
+                                             validate="key",
+                                             validatecommand=(vcmd_float, '%P'),
+                                             width=8)
+        self.movement_back_mult_entry.grid(row=0, column=3, padx=5)
+        
         # E技能内部计时器
         row_counter += 1
         frame_row = ttk.Frame(self.main_frame)
