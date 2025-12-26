@@ -54,11 +54,6 @@ class ConfigPanelApp(tk.Toplevel):
         logger.info(f"当前版本: {version}")
         logger.info(self.INTRODUCTION, extra={"summary": True})
         logger.info("**********************************")
-        
-        if self.last_version.get() != version:
-            ShowChangesLogWindow()
-            self.last_version.set(version)
-            self.save_config()
 
     def save_config(self):
 
