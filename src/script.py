@@ -1273,6 +1273,7 @@ def Factory():
                         return True
                 return False
             case "角色材料30" | "角色材料60":
+                GoForward(5000)
                 if not ResetPosition():
                     return False
                 GoLeft(9150)
