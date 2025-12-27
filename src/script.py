@@ -1223,8 +1223,12 @@ def Factory():
                     return False
             case "角色经验50":
                 if CheckIf(ScreenShot(), "保护目标", [[693,212,109,110]]):
-                    GoForward(9600)
-                    Sleep(0.5)
+                    GoForward(3300)
+                    Sleep(2)
+                    Press([1086,797]) # press e to destroy obstacle
+                    Sleep(4)
+                    GoForward(6800)
+                    Sleep(2)
                     GoLeft(400)
                     if TryQuickUnlock():
                         GoRight(3250)
