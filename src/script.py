@@ -841,9 +841,9 @@ def Factory():
         mult = getattr(setting, '_MOVEMENT_LEFT_MULT', 1.02)
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 560 550 50 550 {int(mult*time)}")
+            DeviceShell(f"input swipe 460 550 50 550 {int(mult*time)}")
         else:
-            DeviceShell(f"input swipe 560 550 50 550 {int(mult*SPLIT)}")
+            DeviceShell(f"input swipe 460 550 50 550 {int(mult*SPLIT)}")
             GoLeft(time-SPLIT)
 
     def DoubleJump():
@@ -1264,12 +1264,13 @@ def Factory():
                                 return False
                         if not ResetPosition():
                             return False
-                        GoLeft(4000)
+                        GoLeft(6000)
                         DoubleJump()
                         Sleep(2)
                         GoLeft(1000)
                         DoubleJump()
                         GoLeft(1000)
+                        DoubleJump()
                         GoRight(3000)
                         GoLeft(200)
                         return True
@@ -1831,7 +1832,7 @@ def Factory():
                 return True
         @register('rouge')
         def handle_rouge_battle(scn):
-            if CheckIf(scn, "肉鸽_战斗", [[1318,69,231,72]]):
+            if CheckIf(scn, "肉鸽_战斗", [[34,241,279,141]]):
                 runtimeContext._ROUGE_battle_finished = False
                 runtimeContext._ROUGE_tick_counter += 1
                 if CheckIf(scn,"保护目标", [[522,337,201,144]]):
@@ -1857,12 +1858,12 @@ def Factory():
             return False
         @register('rouge')
         def handle_rouge_explore(scn):
-            if CheckIf(scn, "肉鸽_继续探索", [[1370,62,195,59]]):
+            if CheckIf(scn, "肉鸽_继续探索", [[34,241,279,141]]):
                 runtimeContext._ROUGE_tick_counter+=1
                 if not runtimeContext._ROUGE_battle_finished:
                     Sleep(2)
                     scn = ScreenShot()
-                    if CheckIf(scn, "肉鸽_继续探索", [[1370,62,195,59]]):
+                    if CheckIf(scn, "肉鸽_继续探索", [[34,241,279,141]]):
                         runtimeContext._ROUGE_battle_finished = True
                 elif runtimeContext._ROUGE_battle_finished:
                     if not runtimeContext._ROUGE_new_battle_reset:
@@ -1894,7 +1895,7 @@ def Factory():
 
             if Press(CheckIf(scn,"肉鸽_休整按钮")):
                 return True
-            if CheckIf(scn, "肉鸽_休整", [[1370,62,195,59]]):
+            if CheckIf(scn, "肉鸽_休整", [[34,241,279,141]]):
                 if not locals_dict['_has_forwarded']:
                     GoForward(5000)
                     locals_dict['_has_forwarded'] = True
