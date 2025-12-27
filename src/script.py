@@ -486,8 +486,8 @@ def Factory():
             match = re.match(r"input tap (\d+) (\d+)", cmdStr)
             if match:
                 x, y = int(match.group(1)), int(match.group(2))
-                x_randomized = x + random.randint(-2, 2)
-                y_randomized = y + random.randint(-2, 2)
+                x_randomized = x + random.randint(-1, 0)
+                y_randomized = y + random.randint(-1, 0)
                 cmdStr = f"input tap {x_randomized} {y_randomized}"
         
         elif cmdStr.startswith("input swipe "):
@@ -498,10 +498,10 @@ def Factory():
                 duration = match.group(5) if match.group(5) else None
                 
                 # Randomize all coordinates by ±2 pixels
-                x1_randomized = x1 + random.randint(-2, 2)
-                y1_randomized = y1 + random.randint(-2, 2)
-                x2_randomized = x2 + random.randint(-2, 2)
-                y2_randomized = y2 + random.randint(-2, 2)
+                x1_randomized = x1 + random.randint(-1, 0)
+                y1_randomized = y1 + random.randint(-1, 0)
+                x2_randomized = x2 + random.randint(-1, 0)
+                y2_randomized = y2 + random.randint(-1, 0)
                 
                 if duration:
                     cmdStr = f"input swipe {x1_randomized} {y1_randomized} {x2_randomized} {y2_randomized} {duration}"
@@ -1225,7 +1225,7 @@ def Factory():
                 if CheckIf(ScreenShot(), "保护目标", [[693,212,109,110]]):
                     GoForward(3300)
                     Sleep(2)
-                    Press([1086,797]) # press e to destroy obstacle
+                    CastSpell() # destroy obstacle
                     Sleep(2)
                     GoLeft(500)
                     Sleep(2)
@@ -1235,7 +1235,7 @@ def Factory():
                         Sleep(2)
                         GoForward(3000)
                         Sleep(2)
-                        GoLeft(1800)
+                        GoLeft(1950)
                         Sleep(2)
                         GoForward(3000)
                         Sleep(3)
@@ -1245,6 +1245,7 @@ def Factory():
                         Sleep(2)
                         if not ResetPosition():
                             return False
+                        CastSpell()
                         Sleep(5)
                         GoBack(5000)
                         Sleep(5)
