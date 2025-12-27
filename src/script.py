@@ -1226,17 +1226,23 @@ def Factory():
                     GoForward(3300)
                     Sleep(2)
                     Press([1086,797]) # press e to destroy obstacle
-                    Sleep(4)
-                    GoForward(6800)
                     Sleep(2)
-                    GoLeft(400)
+                    GoLeft(500)
+                    Sleep(2)
+                    GoForward(6650)
                     if TryQuickUnlock():
                         GoRight(3250)
+                        Sleep(2)
                         GoForward(3000)
+                        Sleep(2)
                         GoLeft(1800)
+                        Sleep(2)
                         GoForward(3000)
-                        GoLeft(1550)
+                        Sleep(3)
+                        GoLeft(1800)
+                        Sleep(2)
                         GoForward(2000)
+                        Sleep(2)
                         if not ResetPosition():
                             return False
                         Sleep(5)
@@ -1259,6 +1265,7 @@ def Factory():
                             return False
                         GoLeft(4000)
                         DoubleJump()
+                        Sleep(2)
                         GoLeft(1000)
                         DoubleJump()
                         GoLeft(1000)
