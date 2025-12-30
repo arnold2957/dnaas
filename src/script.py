@@ -20,7 +20,7 @@ DUNGEON_TARGETS = {
     "武器突破": {"60":5, "70":6},
     "皎皎币":   {"60":3,"70":4},
     "夜航手册": {"30":2, "40":3,"50":4,"55":5, "60":6,"65":7,"70":8,"80":8},
-    "魔之楔(不是夜航手册!)": {"40":1, "60": 2, "80":3, "100":4},
+    "魔之楔": {"40":1, "60": 2, "80":3, "100":4},
     "mod强化": {"60":4, "60(测试)":4},
     "开密函": {"驱离":0, "探险无尽":0, "半自动无巧手":0},
     "钓鱼": {"悠闲":0},
@@ -28,6 +28,7 @@ DUNGEON_TARGETS = {
     # "测试": {"测试":0}
     }
 DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9"]
+DUNGEON_TOTAL = {"30":4, "40":5,"50":4,"55":6, "60":8,"65":9,"70":6,"80":5}
 
 ####################################
 CONFIG_VAR_LIST = [
@@ -387,6 +388,7 @@ def CutRoI(screenshot,roi):
 ##################################################################
 
 def Factory():
+    global GoForward, GoBack, GoLeft, GoRight, DoubleJump, Press, Fly, Ultmate, Skill
     toaster = ToastNotifier()
     setting =  None
     quest = None
@@ -591,11 +593,19 @@ def Factory():
             if mean_diff<0.2:
                 return True
         return False
-    def Press(pos):
-        if pos!=None:
+    # def Press(pos):
+    #     if pos!=None:
+    #         DeviceShell(f"input tap {pos[0]} {pos[1]}")
+    #         return True
+    #     return False
+    def Press(pos, long_press_time=None):
+        if pos is None:
+            return False
+        if long_press_time is None:
             DeviceShell(f"input tap {pos[0]} {pos[1]}")
-            return True
-        return False
+        else:
+            DeviceShell(f"input swipe {pos[0]} {pos[1]} {pos[0]} {pos[1]} {long_press_time}")
+        return True
     def PressReturn():
         DeviceShell('input keyevent KEYCODE_BACK')
     def WrapImage(image,r,g,b):
@@ -795,7 +805,13 @@ def Factory():
         Press([1359,478])
         Sleep(0.5)
         Press([1359,478])
-
+    def Fly(time=1000):
+        Press([1359,478], long_press_time=time)
+    def Ultmate():
+        Press([1205,779])
+        Sleep(4)
+    def Skill():
+        Press([1055,800])
     def GoRight(time = 1000):
         # logger.info(f"往右走 剩余{time}")
         SPLIT = 3000
@@ -1017,30 +1033,22 @@ def Factory():
                 FindCoordsOrElseExecuteFallbackAndWait(mat_elem[select],[1020+83*select,778],1)
         elif setting._FARM_TYPE == "夜航手册":
             FindCoordsOrElseExecuteFallbackAndWait("前往","夜航手册",1)
-            lvl = DUNGEON_TARGETS[setting._FARM_TYPE][setting._FARM_LVL]
+            lv = DUNGEON_TARGETS[setting._FARM_TYPE][setting._FARM_LVL]
+            lvl = setting._FARM_LVL
             if setting._FARM_LVL != '80':
                 DeviceShell("input swipe 562 210 562 714")
                 Sleep(2)
-            Press([562,210+(lvl-1)*84])
+            Press([562,210+(lv-1)*84])
             if setting._FARM_EXTRA == "无关心":
                 farm_target = random.choice([1,2,3,4])
             else:
                 farm_target = int(setting._FARM_EXTRA)
-            if farm_target <= 5:
-                FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(farm_target-1)*110],1)
-            else:
-                if lvl != 7:
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(5-1)*110],1)
-                else:
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(farm_target-4-1)*110],1)
+            select_dungeon(farm_target,lvl)
 
     def resetMove():
+        if try_diy_action(setting._FARM_TYPE, setting._FARM_LVL, setting._FARM_EXTRA):
+            return True
+        
         match setting._FARM_TYPE+setting._FARM_LVL:
             case "夜航手册40":
                 return True
@@ -1942,4 +1950,77 @@ def Factory():
 
         QuestFarm()
 
+    def select_dungeon(farm_target, lvl):
+        VISIBLE_COUNT = 5
+        total = DUNGEON_TOTAL.get(lvl, VISIBLE_COUNT)
+        if farm_target > total:
+            farm_target = total
+        if farm_target <= VISIBLE_COUNT:
+            screen_index = farm_target
+        else:
+            screen_index = farm_target - (total - VISIBLE_COUNT)
+        x = 1450
+        y = 228 + (screen_index - 1) * 110
+        Press([800, 400])
+        Sleep(0.5)
+        if farm_target > VISIBLE_COUNT:
+            DeviceShell("input swipe 800 555 800 222")
+            Sleep(1)
+        FindCoordsOrElseExecuteFallbackAndWait("确认选择", [x, y], 1)
+
+    def try_diy_action(farm_type, farm_lvl, extra_target):
+        ACTION_MAP = {
+            "左": "GoLeft",
+            "右": "GoRight",
+            "前": "GoForward",
+            "后": "GoBack",
+            "飞": "Fly",
+            "大招": "Ultmate",
+            "技能": "Skill",
+            "二段跳": "DoubleJump",
+            "点击": "Press",
+        }
+        def strip_comment(line: str):
+            for mark in ("#", "//", ";"):
+                if mark in line:
+                    line = line.split(mark, 1)[0]
+            return line.strip()
+
+        def normalize_cmd(line: str):
+            if "(" not in line:
+                return line + "()"
+            return line.replace("( )", "()")
+        
+        if extra_target == "无关心":
+            return False
+
+        file_name = f"{farm_lvl}-{extra_target}.txt"
+        file_path = os.path.join("diy", farm_type, file_name)
+
+        if not os.path.exists(file_path):
+            return False
+        logger.info(f"执行 DIY 副本: {file_name}")
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        for raw_line in lines:
+            line = strip_comment(raw_line)
+            if not line:
+                continue
+
+            # 中文命令 → 函数名
+            for key, func_name in ACTION_MAP.items():
+                if line.startswith(key):
+                    line = line.replace(key, func_name, 1)
+                    break
+
+            line = normalize_cmd(line)
+
+            try:
+                exec(line, globals(), locals())
+            except Exception as e:
+                print(f"[DIY] 执行失败: {line}, 错误: {e}")
+        
+        return True
+    
     return Farm
