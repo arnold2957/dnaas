@@ -1148,6 +1148,8 @@ def Factory():
                 return False
             case "皎皎币70":
                 Sleep(2)
+                GoForward(12000)
+                Sleep(2)
                 if not ResetPosition():
                     return False
                 scn = ScreenShot()
