@@ -1161,19 +1161,22 @@ def Factory():
                         return True
                     return False
             case "夜航手册80":
-                if int(setting._FARM_EXTRA) not in [1,4,5]:
-                    logger.info("暂不支持的mod额外参数. 当前仅支持1,4,5.")
-                    return False
-                if int(setting._FARM_EXTRA) == 1:
+                val = setting._FARM_EXTRA
+                if val == "无关心" or not str(val).isdigit():
                     return True
-                if int(setting._FARM_EXTRA) == 4:
+                val_int = int(val)
+                if val_int == 1:
+                    return True
+                elif val_int == 4:
                     GoForward(14000)
                     return True
-                if int(setting._FARM_EXTRA) == 5:
-                    AUTOCalibration_P([800,450])
+                elif val_int == 5:
+                    AUTOCalibration_P([800, 450])
                     GoForward(15000)
                     return True
-
+                else:
+                    logger.info(f"暂不支持的mod额外参数: {val_int}. 当前仅支持1, 4, 5.")
+                    return False
             case "角色经验50":
                 if CheckIf(ScreenShot(), "保护目标", [[693,212,109,110]]):
                     GoForward(9600)
