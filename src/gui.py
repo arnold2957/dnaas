@@ -153,7 +153,6 @@ class ConfigPanelApp(tk.Toplevel):
             )
         self.button_save_adb_port.grid(row=0, column=4)
 
-
         row_counter += 1
         self.low_fps_check = ttk.Checkbutton(
             self.main_frame,
@@ -168,6 +167,38 @@ class ConfigPanelApp(tk.Toplevel):
         row_counter += 1
         ttk.Separator(self.main_frame, orient='horizontal').grid(row=row_counter, column=0, columnspan=3, sticky='ew', pady=10)
 
+        # 自动密函
+        row_counter += 1
+        frame_row = ttk.Frame(self.main_frame)
+        frame_row.grid(row=row_counter, column=0, sticky="ew", pady=5) 
+        ttk.Label(frame_row, text="自动密函驱离:").grid(row=0, column=0, sticky=tk.W, pady=5)
+
+        self.auto_letter_char_check = ttk.Checkbutton(
+            frame_row,
+            variable=self.auto_letter_char,
+            text="人物",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.auto_letter_char_check.grid(row=0, column=1, sticky="ew", pady=5)
+
+        self.auto_letter_weapeon_check = ttk.Checkbutton(
+            frame_row,
+            variable=self.auto_letter_weapeon,
+            text="武器",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.auto_letter_weapeon_check.grid(row=0, column=2, sticky="ew", pady=5)
+
+        self.auto_letter_mod_check = ttk.Checkbutton(
+            frame_row,
+            variable=self.auto_letter_mod,
+            text="MOD",
+            command=checkcommand,
+            style="Custom.TCheckbutton"
+            )
+        self.auto_letter_mod_check.grid(row=0, column=3, sticky="ew", pady=5)
         # 地下城目标
         def UpdateLvlCombo(*args):
             if self.farm_type_var.get() in DUNGEON_TARGETS.keys():
@@ -465,7 +496,10 @@ class ConfigPanelApp(tk.Toplevel):
             self.farm_target_extra_combo,
             self.farm_target_combo,
             self.farm_target_lvl_combo,
-            self.cast_Q_once_check
+            self.cast_Q_once_check,
+            self.auto_letter_char_check,
+            self.auto_letter_mod_check,
+            self.auto_letter_weapeon_check,
             ]
 
         if state == tk.DISABLED:

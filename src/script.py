@@ -22,7 +22,6 @@ DUNGEON_TARGETS = {
     "夜航手册": {"30":2, "40":3,"50":4,"55":5, "60":6,"65":7,"70":8,"80":8},
     "魔之楔(不是夜航手册!)": {"40":1, "60": 2, "80":3, "100":4},
     "mod强化": {"60":4, "60(测试)":4},
-    "开密函": {"驱离":0, "探险无尽":0, "半自动无巧手":0},
     "钓鱼": {"悠闲":0},
     "迷津": {"默认难度":0},
     # "测试": {"测试":0}
@@ -32,25 +31,29 @@ DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9"]
 ####################################
 CONFIG_VAR_LIST = [
             #var_name,                      type,          config_name,                  default_value
-            ["farm_type_var",               tk.StringVar,  "_FARM_TYPE",                 "皎皎币"],
-            ["farm_lvl_var",                tk.StringVar,  "_FARM_LVL",                  "60"],
-            ["farm_extra_var",              tk.StringVar,  "_FARM_EXTRA",                "无关心"],
-            ["emu_path_var",                tk.StringVar,  "_EMUPATH",                   ""],
-            ["adb_port_var",                tk.StringVar,  "_ADBPORT",                   16384],
-            ["last_version",                tk.StringVar,  "LAST_VERSION",               ""],
-            ["latest_version",              tk.StringVar,  "LATEST_VERSION",             None],
-            ["low_fps_var",                 tk.BooleanVar, "_LOW_FPS",                   False],
-            ["cast_e_var",                  tk.BooleanVar, "_CAST_E_ABILITY",            True],
-            ["cast_intervel_var",           tk.IntVar,     "_CAST_E_INTERVAL",           7],
-            ["restart_intervel_var",        tk.IntVar,     "_RESTART_INTERVAL",          2000],
-            ["green_book_var",              tk.BooleanVar, "_GREEN_BOOK",                False],
-            ["green_book_final_var",        tk.BooleanVar, "_GREEN_BOOK_FINAL",          False],
-            ["round_custom_var",            tk.BooleanVar, "_ROUND_CUSTOM_ACTIVE",       False],
-            ["round_custom_time_var",       tk.IntVar,     "_ROUND_CUSTOM_TIME",         3],
-            ["cast_q_var",                  tk.BooleanVar, "_CAST_Q_ABILITY",            False],
-            ["cast_Q_intervel_var",         tk.IntVar,     "_CAST_Q_INTERVAL",           25],
-            ["cast_e_print_var",            tk.BooleanVar, "_CAST_E_PRINT",              False],
-            ["cast_Q_once_var",             tk.BooleanVar, "_CAST_Q_ONCE",              False]
+            ["farm_type_var",               tk.StringVar,  "_FARM_TYPE",                  "皎皎币"],
+            ["farm_lvl_var",                tk.StringVar,  "_FARM_LVL",                   "60"],
+            ["farm_extra_var",              tk.StringVar,  "_FARM_EXTRA",                 "无关心"],
+            ["emu_path_var",                tk.StringVar,  "_EMUPATH",                    ""],
+            ["adb_port_var",                tk.StringVar,  "_ADBPORT",                    16384],
+            ["last_version",                tk.StringVar,  "LAST_VERSION",                ""],
+            ["latest_version",              tk.StringVar,  "LATEST_VERSION",              None],
+            ["low_fps_var",                 tk.BooleanVar, "_LOW_FPS",                    False],
+            ["cast_e_var",                  tk.BooleanVar, "_CAST_E_ABILITY",             True],
+            ["cast_intervel_var",           tk.IntVar,     "_CAST_E_INTERVAL",            7],
+            ["restart_intervel_var",        tk.IntVar,     "_RESTART_INTERVAL",           2000],
+            ["green_book_var",              tk.BooleanVar, "_GREEN_BOOK",                 False],
+            ["green_book_final_var",        tk.BooleanVar, "_GREEN_BOOK_FINAL",           False],
+            ["round_custom_var",            tk.BooleanVar, "_ROUND_CUSTOM_ACTIVE",        False],
+            ["round_custom_time_var",       tk.IntVar,     "_ROUND_CUSTOM_TIME",          3],
+            ["cast_q_var",                  tk.BooleanVar, "_CAST_Q_ABILITY",             False],
+            ["cast_Q_intervel_var",         tk.IntVar,     "_CAST_Q_INTERVAL",            25],
+            ["cast_e_print_var",            tk.BooleanVar, "_CAST_E_PRINT",               False],
+            ["cast_Q_once_var",             tk.BooleanVar, "_CAST_Q_ONCE",                False],
+            ["auto_letter_check_time",      tk.StringVar,  "_AUTO_LETTER_TYPE_CHECK_TIME",False],
+            ["auto_letter_char",            tk.BooleanVar, "_AUTO_LETTER_CHAR",           False],
+            ["auto_letter_weapeon",         tk.BooleanVar, "_AUTO_LETTER_WEAPEON",        False],
+            ["auto_letter_mod",             tk.BooleanVar, "_AUTO_LETTER_MOD",            False],
             ]
 
 class FarmConfig:
@@ -83,6 +86,12 @@ class RuntimeContext:
     _CASTED_Q = False
     _GAME_PREPARE = False
     _CRASHCOUNTER = 0
+    #### 自动密函
+    _LETTER_HOUR = False
+    _AUTO_LETTER_INFO = ""
+    _AUTO_LETTER_GAME_COUNTER = 0
+    _GAME_END_INFO = ""
+    _AUTO_LETTER_TYPE_CHECK_TIME = ""
 class FarmQuest:
     _DUNGWAITTIMEOUT = 0
     _TARGETINFOLIST = None
@@ -988,12 +997,38 @@ def Factory():
                 Sleep(0.5)
         return False
     ##################################################################
+    def goAndCheckLetter():
+        letter = False
+        if setting._AUTO_LETTER_CHAR or setting._AUTO_LETTER_WEAPEON or setting._AUTO_LETTER_MOD:
+            FindCoordsOrElseExecuteFallbackAndWait("委托密函_概率说明","委托密函",1)
+            if setting._AUTO_LETTER_CHAR and Press(CheckIf(ScreenShot(),"委托密函_驱离",[[547,532,100,250]])):
+                letter =  True
+            elif setting._AUTO_LETTER_WEAPEON and Press(CheckIf(ScreenShot(),"委托密函_驱离",[[892,528,100,250]])):
+                letter =  True
+            elif setting._AUTO_LETTER_MOD and Press(CheckIf(ScreenShot(),"委托密函_驱离",[[1239,529,100,250]])):
+                letter =  True
+        if letter:
+            Sleep(2)
+            Press(CheckIf(ScreenShot(),"选择密函(开始)"))
+            return True
+        return False
     def BasicQuestSelect():
-        if setting._FARM_TYPE == "开密函":
-            logger.info("错误: 开密函模式无法自动选择任务. 取消执行.")
-            setting._FORCESTOPING.set()
-            return
-        elif setting._FARM_TYPE == "迷津":
+        currentHour = datetime.now().strftime('%Y-%m-%d-%H')
+        if (runtimeContext._AUTO_LETTER_TYPE_CHECK_TIME != currentHour): # 如果是一个新的小时, 那么进行检查
+            runtimeContext._AUTO_LETTER_TYPE_CHECK_TIME = currentHour # 记录检查时间
+            runtimeContext._LETTER_HOUR = False # 重置为否
+            if goAndCheckLetter():
+                runtimeContext._LETTER_HOUR = True
+                return
+        
+        if runtimeContext._LETTER_HOUR: # 如果因为其他理由来到了这里
+            if goAndCheckLetter():
+                return
+            else:
+                runtimeContext._LETTER_HOUR = False
+                
+
+        if setting._FARM_TYPE == "迷津":
             FindCoordsOrElseExecuteFallbackAndWait("迷津",[88,407],1)
             FindCoordsOrElseExecuteFallbackAndWait("肉鸽_堕入深渊","肉鸽_前往",1)
             Press(FindCoordsOrElseExecuteFallbackAndWait("肉鸽_开始探索", ["肉鸽_堕入深渊","确定","肉鸽_关闭结算", "肉鸽_结束探索"],1))
@@ -1041,6 +1076,10 @@ def Factory():
                     FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(farm_target-4-1)*110],1)
 
     def resetMove():
+        if runtimeContext._LETTER_HOUR:
+            if not ResetPosition():
+                return False
+            return True
         match setting._FARM_TYPE+setting._FARM_LVL:
             case "夜航手册40":
                 return True
@@ -1048,9 +1087,6 @@ def Factory():
                 GoForward(15000)
                 GoBack(1000)
                 GoLeft(100)
-                return True
-            case "开密函驱离":
-                ResetPosition()
                 return True
             case "皎皎币60":
                 if not ResetPosition():
@@ -1217,7 +1253,7 @@ def Factory():
                         GoLeft(200)
                         return True
                 return False
-            case "角色材料10" | "开密函探险无尽":
+            case "角色材料10":
                 if not ResetPosition():
                     return False
                 Sleep(3)
@@ -1535,7 +1571,7 @@ def Factory():
                     DEFAULTWAVE = 3
                 case "角色材料10":
                     DEFAULTWAVE = 15
-                case "角色材料30" | "角色材料60" | "开密函探险无尽" | "开密函半自动无巧手":
+                case "角色材料30" | "角色材料60":
                     DEFAULTWAVE = 15
                 case _:
                     DEFAULTWAVE = 1
@@ -1652,6 +1688,7 @@ def Factory():
             return False
         @register('normal')
         def handle_start_dungeon(scn):
+            Press(CheckIf(scn, "选择密函(开始)"))
             if pos:=(CheckIf(scn, "开始挑战")):
                 logger.info("开始挑战!")
                 if setting._GREEN_BOOK or (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
@@ -1720,15 +1757,29 @@ def Factory():
         def handle_continue(scn):
             nonlocal runtimeContext
             if pos:=(CheckIf(scn, "再次进行")):
-                Press(pos)
+                ###### 接下来干嘛
+                if (runtimeContext._AUTO_LETTER_TYPE_CHECK_TIME != datetime.now().strftime('%Y-%m-%d-%H')) and (setting._AUTO_LETTER_CHAR or setting._AUTO_LETTER_WEAPEON or setting._AUTO_LETTER_MOD):
+                    PressReturn()
+                else:
+                    Press(pos)
+
+                ######
                 runtimeContext._CASTED_Q = False
                 cost_time = time.time()-runtimeContext._START_TIME
                 if cost_time > 10:
-                    runtimeContext._GAME_COUNTER += 1
-                    runtimeContext._GAME_PREPARE = False
                     runtimeContext._TOTAL_TIME = runtimeContext._TOTAL_TIME + cost_time
+                    runtimeContext._GAME_PREPARE = False
                     logger.info(f"本轮用时{cost_time:.2f}秒.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.")
-                    logger.info(f"第{runtimeContext._GAME_COUNTER}次{setting._FARM_TYPE+setting._FARM_LVL}完成.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒.", extra={"summary": True})
+
+                    if runtimeContext._LETTER_HOUR:
+                        runtimeContext._AUTO_LETTER_GAME_COUNTER += 1
+                        runtimeContext._AUTO_LETTER_INFO = f"已完成{runtimeContext._AUTO_LETTER_GAME_COUNTER}次自动密函驱离."
+                    else:
+                        runtimeContext._GAME_COUNTER += 1
+                        runtimeContext._GAME_END_INFO = f"第{runtimeContext._GAME_COUNTER}次{setting._FARM_TYPE+setting._FARM_LVL}完成.\n累计用时{runtimeContext._TOTAL_TIME:.2f}秒."
+                    
+                    logger.info(f"{runtimeContext._AUTO_LETTER_INFO }\n{runtimeContext._GAME_END_INFO}", extra={"summary": True})
+
                     runtimeContext._START_TIME = time.time()
                 return True
             return False
