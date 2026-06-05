@@ -905,6 +905,11 @@ def Factory():
         CastQOnce()
         CastESpell()
         CastQSpell()
+    def CastRope():
+        for _ in range(5):
+            Press([1243,368])
+            Sleep(0.1)
+        Sleep(4)
     def CastSpearRush(time, attack = False):
         for _ in range(time):
             DeviceShell("input swipe 1336 630 1336 630 500")
@@ -991,8 +996,9 @@ def Factory():
                 delta = [round((pos[0]-tar_p[0])), round((pos[1]-tar_p[1]))]
                 if (abs(delta[0]) <= 3+setting._FPS_ADJUSTER*2) and (abs(delta[1]) <= 3+setting._FPS_ADJUSTER*2):
                     return True
-                delta[0] = int(delta[0]/1.4)
+                delta[0] = int(delta[0]/2)
                 delta[1] = int(delta[1]/2)
+                logger.debug(f"自动校正 目标{pos} 移动{delta[0]//setting._FPS_ADJUSTER} {delta[1]//setting._FPS_ADJUSTER}")
                 DeviceShell(f"input swipe 1200 225 {delta[0]//setting._FPS_ADJUSTER+1200} {delta[1]//setting._FPS_ADJUSTER+225} {1500*setting._FPS_ADJUSTER-1000}")
                 Sleep(0.5)
         return False
@@ -1159,11 +1165,13 @@ def Factory():
                 return False
             case "夜航手册65" | "夜航手册30":
                 Sleep(2)
-                CastSpearRush(3)
-                AUTOCalibration_P([800,450])
-                CastSpearRush(7)
-                AUTOCalibration_P([800,450])
-                CastSpearRush(5)
+                GoBack(1000)
+                GoLeft(6000)
+                GoForward(11300)
+                GoLeft(6000)
+                DoubleJump()
+                GoLeft(3000)
+                GoLeft(14000)
 
                 if not ResetPosition():
                     return False
@@ -1723,6 +1731,10 @@ def Factory():
             if (seconds_since_midnight>=4*3600) and (seconds_since_midnight<=6*3600):
                 if Press(CheckIf(scn,"小月卡")):
                     logger.info("已领取小月卡.")
+                    return True
+                if CheckIf(scn,"每日签到"):
+                    Press([1405,188])
+                    logger.info("已领取每日签到.")
                     return True
             return False
         @register('normal')
