@@ -823,9 +823,9 @@ def Factory():
         # logger.info(f"往前走 剩余{time}")
         SPLIT = 3000
         if time <= SPLIT:
-            DeviceShell(f"input swipe 500 610 500 400 {int(time*21/20)}")
+            DeviceShell(f"input swipe 500 710 500 500 {int(time*21/20)}")
         else:
-            DeviceShell(f"input swipe 500 610 500 400 {int(SPLIT*21/20)}")
+            DeviceShell(f"input swipe 500 710 500 500 {int(SPLIT*21/20)}")
             GoForward(time-SPLIT)
     def GoBack(time = 1000):
         # logger.info(f"往后走 剩余{time}")
