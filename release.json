@@ -1,7 +1,7 @@
 {
-  "version": "1.2.5",
-  "download_url": "https://github.com/arnold2957/dnaas/releases/download/1.2.5/dnaas_v1.2.5.zip",
-  "md5": "301e11a0576e36ac8634e86aaf82be3f",
-  "release_date": "2026-06-06 10:14:36",
-  "release_notes": "https://github.com/arnold2957/dnaas/releases/tag/1.2.5"
+  "download_url": "https://github.com/arnold2957/dnaas/releases/download/1.2.6/dnaas_v1.2.6.zip",
+  "release_date": "2026-06-06 12:10:17",
+  "release_notes": "https://github.com/arnold2957/dnaas/releases/tag/1.2.6",
+  "version": "1.2.6",
+  "md5": "f0c4091c02d76ea033534bdf42a47927"
 }
