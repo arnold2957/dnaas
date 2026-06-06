@@ -1178,10 +1178,11 @@ def Factory():
                 GoBack(1000)
                 GoLeft(6000)
                 GoForward(11300)
-                GoLeft(6000)
-                DoubleJump()
-                GoLeft(3000)
-                GoLeft(14000)
+                DeviceShell(f"input swipe 800 225 {(800-728/setting._FPS_ADJUSTER)} 225 500")
+                AUTOCalibration_P([800,600])
+                CastSpearRush(4)
+                AUTOCalibration_P()
+                GoForward(6000)
 
                 if not ResetPosition():
                     return False
@@ -1721,7 +1722,6 @@ def Factory():
             return False
         @register('normal')
         def handle_start_dungeon(scn):
-            Press(CheckIf(scn, "选择密函(开始)"))
             if pos:=(CheckIf(scn, "开始挑战")):
                 logger.info("开始挑战!")
                 if setting._GREEN_BOOK or (setting._GREEN_BOOK_FINAL and (runtimeContext._IN_GAME_COUNTER == DEFAULTWAVE)):
@@ -1737,14 +1737,26 @@ def Factory():
             return False
         @register('normal')
         def handle_confirm_and_select_letter(scn):
-            if (find_nuts:=CheckIf(scn, "选择密函")) or (CheckIf(scn, "确认选择")):
-                if find_nuts:
-                    Press([889,458])
-                    Sleep(0.2)
-                    Press([889,458])
-                    Sleep(0.2)
+            if pos:=CheckIf(scn, "选择密函(开始)"):
+                Press(pos)
+                return True
+            if CheckIf(scn, "选择密函"):
+                Press([810,437])
+                Sleep(0.2)
+                Press([810,437])
+                Sleep(0.2)
+            if CheckIf(scn:=ScreenShot(), "确认选择"):
                 Press(CheckIf(scn,"确认选择"))
                 return True
+            elif CheckIf(scn,"购买"):
+                runtimeContext._LETTER_HOUR = False
+                logger.info("已经开完所有密函")
+                Press(CheckIf(scn,"放弃"))
+                Sleep(1)
+                PressReturn()
+                Sleep(0.5)
+                PressReturn()
+                return False
             return False
         @register()
         def handle_rez(scn):
