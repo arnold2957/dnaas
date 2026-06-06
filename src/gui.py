@@ -137,7 +137,7 @@ class ConfigPanelApp(tk.Toplevel):
         
         self.emu_path_var.trace_add("write", lambda *args: update_adb_status())
         update_adb_status()  # 初始调用
-        ttk.Label(frame_row, text="模拟器端口:").grid(row=0, column=1, sticky=tk.W, pady=5)
+        ttk.Label(frame_row, text="端口:").grid(row=0, column=2, sticky=tk.W, pady=5)
         vcmd_non_neg = self.register(lambda x: ((x=="")or(x.isdigit())))
         self.adb_port_entry = ttk.Entry(frame_row,
                                         textvariable=self.adb_port_var,
