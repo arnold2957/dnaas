@@ -1737,7 +1737,7 @@ def Factory():
             return False
         @register('normal')
         def handle_confirm_and_select_letter(scn):
-            if pos:=CheckIf(scn, "选择密函(开始)"):
+            if pos:=CheckIf(scn, "选择密函(开始)",[[800,450,800,450]]):
                 Press(pos)
                 return True
             if CheckIf(scn, "选择密函"):
