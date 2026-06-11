@@ -19,14 +19,14 @@ DUNGEON_TARGETS = {
     "角色材料": {"10":1, "30":3, "60":6},
     "武器突破": {"60":5, "70":6},
     "皎皎币":   {"50":2,"60":3,"70":4},
-    "夜航手册": {"30":2, "40":3,"50":4,"55":5, "60":6,"65":7,"70":8,"75":7,"80":8},
+    "夜航手册": {"30":2, "40":3,"50":4,"55":5, "60":6,"65":7,"70":6,"75":7,"80":8},
     "魔之楔(不是夜航手册!)": {"40":1, "60": 2, "80":3, "100":4},
     "mod强化": {"60":4, "60(测试)":4},
     "钓鱼": {"悠闲":0},
     "迷津": {"默认难度":0},
     "测试": {"测试":0}
     }
-DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9"]
+DUNGEON_EXTRA = ["无关心","1","2","3","4","5","6","7","8","9","10","11","12","13"]
 
 ####################################
 CONFIG_VAR_LIST = [
@@ -1066,28 +1066,32 @@ def Factory():
                 FindCoordsOrElseExecuteFallbackAndWait(mat_elem[select],[1020+83*select,778],1)
         elif setting._FARM_TYPE == "夜航手册":
             FindCoordsOrElseExecuteFallbackAndWait("前往","夜航手册",1)
-            lvl = DUNGEON_TARGETS[setting._FARM_TYPE][setting._FARM_LVL]
-            if setting._FARM_LVL not in ["75","80"]:
+            
+            if setting._FARM_LVL not in ["70","75","80"]:
+                lvl = DUNGEON_TARGETS[setting._FARM_TYPE][setting._FARM_LVL]
                 DeviceShell("input swipe 562 210 562 714")
                 Sleep(2)
-            Press([562,210+(lvl-1)*84])
+                Press([562,210+(lvl-1)*84])
+            elif setting._FARM_LVL in ["70","75"]:
+                Press(CheckIf(ScreenShot(),"夜航/"+setting._FARM_LVL))
+                Sleep(2)
+            else: # setting._FARM_LVL == '80'
+                pass
+
             if setting._FARM_EXTRA == "无关心":
                 farm_target = random.choice([1,2,3,4])
             else:
                 farm_target = int(setting._FARM_EXTRA)
-            if farm_target <= 5:
+            if farm_target <= 4:
                 FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(farm_target-1)*110],1)
             else:
-                if lvl != 7:
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(5-1)*110],1)
+                if setting._FARM_LVL in ["65","70","75"]:
+                    tar = f"夜航/{setting._FARM_LVL}-{farm_target}"
+                    pos = FindCoordsOrElseExecuteFallbackAndWait(tar,"input swipe 794 530 794 205 1000",1)
+                    Press([1480,pos[1]+2])
                 else:
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    DeviceShell(f"input swipe 800 555 800 222")
-                    Sleep(2)
-                    FindCoordsOrElseExecuteFallbackAndWait("确认选择",[1450,228+(farm_target-4-1)*110],1)
+                    logger.error(f"暂时不支持夜航{setting._FARM_LVL}的超过第四栏的副本.")
+                    setting._FORCESTOPING.set()
 
     def resetMove():
         if runtimeContext._LETTER_HOUR:
@@ -1103,12 +1107,9 @@ def Factory():
                 GoLeft(100)
                 return True
             case "皎皎币50":
-                AUTOCalibration_P()
-                CastSpearRush(4)
-                AUTOCalibration_P()
-                CastSpearRush(1)
-                AUTOCalibration_P()
-                CastSpearRush(1)
+                GoForward(11000)
+                DoubleJump()
+                GoForward(4000)
                 return True
             case "皎皎币60":
                 if not ResetPosition():
@@ -1221,9 +1222,6 @@ def Factory():
                         return True
                     return False
             case "夜航手册80":
-                if (setting._FARM_EXTRA == "无关心") or (int(setting._FARM_EXTRA) not in [1,2,3,4]) :
-                    logger.info("暂不支持的mod额外参数. 请在支持的额外参数中选择一个: 当前支持[1,2,3,4].")
-                    return False
                 if int(setting._FARM_EXTRA) == 1:
                     return True
                 if int(setting._FARM_EXTRA) == 2:
@@ -1236,23 +1234,19 @@ def Factory():
                     GoForward(15000)
                     return True
             case "夜航手册75":
-                if (setting._FARM_EXTRA == "无关心") or (int(setting._FARM_EXTRA) not in [1,2,3,4,5]) :
-                    logger.info("暂不支持的mod额外参数. 当前仅支持1,2,3,4,5.")
-                    return False
-                if int(setting._FARM_EXTRA) == 1:
+                if int(setting._FARM_EXTRA) in [1,2,3,6,7,10,11]:
                     GoForward(7000)
                     return True
-                if int(setting._FARM_EXTRA) == 2:
-                    GoForward(7000)
-                    return True
-                if int(setting._FARM_EXTRA) == 3:
-                    GoForward(7000)
-                    return True
-                if int(setting._FARM_EXTRA) == 4:
+                if int(setting._FARM_EXTRA) in [4]:
                     CastSpearRush(4)
                     return True
-                if int(setting._FARM_EXTRA) == 5:
-                    AUTOCalibration_P([800,450])
+                if int(setting._FARM_EXTRA) in [8,12]:
+                    GoForward(11000)
+                    DoubleJump()
+                    GoForward(4000)
+                    return True
+                if int(setting._FARM_EXTRA) in [5,9,13]:
+                    AUTOCalibration_P()
                     GoForward(15000)
             case "角色经验50":
                 if CheckIf(ScreenShot(), "保护目标", [[693,212,109,110]]):
