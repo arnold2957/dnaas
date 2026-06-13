@@ -1195,13 +1195,10 @@ def Factory():
                     GoForward(3000)
                     GoLeft(1800)
                     GoForward(3000)
-                    GoLeft(1550)
-                    GoForward(2000)
-                    if not ResetPosition():
-                        return False
+                    GoLeft(1570)
                     GoForward(10000)
                     AUTOCalibration_Y()
-                    GoForward(5000)
+                    GoForward(10000)
                     return True
                 if CheckIf(ScreenShot(), "保护目标", [[764,217,80,96]]):
                     GoForward(5000)
@@ -1664,9 +1661,12 @@ def Factory():
                         Sleep(1)
                     Press(CheckIf(scn,"悠闲钓鱼_收杆"))
                     Press(CheckIf(scn,"悠闲钓鱼_授鱼以鱼"))
-                    if (CheckIf(scn,"悠闲钓鱼_钓到鱼了")) or (CheckIf(scn,"悠闲钓鱼_新图鉴")):
+                    if (pos1:=CheckIf(scn,"悠闲钓鱼_钓到鱼了")) or (pos2:=CheckIf(scn,"悠闲钓鱼_新图鉴")):
                         logger.info("钓到鱼了!")
-                        Press([802,741])
+                        if pos1:
+                            Press(pos1)
+                        else:
+                            Press(pos2)
                         Sleep(3)
                         counter+=1
                         logger.info(f"钓到了{counter}条鱼, 累计用时{(time.time()-t):.2f}秒.", extra={"summary": True})                    
