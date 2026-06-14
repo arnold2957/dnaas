@@ -1002,11 +1002,11 @@ def Factory():
                 delta = [round((pos[0]-tar_p[0])), round((pos[1]-tar_p[1]))]
                 if (abs(delta[0]) <= 3+setting._FPS_ADJUSTER*2) and (abs(delta[1]) <= 3+setting._FPS_ADJUSTER*2):
                     return True
-                delta[0] = int(delta[0]/2)
-                delta[1] = int(delta[1]/2)
+                delta[0] = int(delta[0]*0.6)
+                delta[1] = int(delta[1]*0.6)
                 logger.debug(f"自动校正 目标{pos} 移动{delta[0]//setting._FPS_ADJUSTER} {delta[1]//setting._FPS_ADJUSTER}")
                 DeviceShell(f"input swipe 1200 225 {delta[0]//setting._FPS_ADJUSTER+1200} {delta[1]//setting._FPS_ADJUSTER+225} {1500*setting._FPS_ADJUSTER-1000}")
-                Sleep(0.5)
+                Sleep(0.35)
         return False
     ##################################################################
     def goAndCheckLetter():
@@ -1107,9 +1107,10 @@ def Factory():
                 GoLeft(100)
                 return True
             case "皎皎币50":
+                DeviceShell(f"input swipe 1200 225 1200 500 1000")
                 GoForward(11000)
                 DoubleJump()
-                GoForward(4000)
+                GoForward(3000)
                 return True
             case "皎皎币60":
                 if not ResetPosition():

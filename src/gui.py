@@ -168,7 +168,7 @@ class ConfigPanelApp(tk.Toplevel):
         self.low_fps_check = ttk.Checkbutton(
             self.main_frame,
             variable=self.low_fps_var,
-            text="兼容模式: 30帧",
+            text="非云游戏, 使用30帧模式",
             command=checkcommand,
             style="Custom.TCheckbutton"
             )
