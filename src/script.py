@@ -978,15 +978,17 @@ def Factory():
             DeviceShell(f"input swipe 1200 225 {round((pos[0]-800)/(3.5*setting._FPS_ADJUSTER)+1200)} 225")
             Sleep(0.5)
         return False
-    def AUTOCalibration_P(tar_p=[800,450], tar_s = None, roi = None):
+    def AUTOCalibration_P(tar_p=[800,450], tar_s = None, roi = None, gain = 0.5, settle_time = 0.5):
         """
         进行自动校准. P代表校准到一个特定的位置(p).
         tar_p: 目标符号想要前往的像素坐标.
         tar_s: 目标符号的特殊声明. 如果该参数为none, 则默认为保护目标(黄点)或撤离点(绿点).
         roi: 我们关心的图片区域. 不在这个区域中的内容一律忽略. None意味着我们使用全部的区域.
+        gain: 每次校正使用的误差比例. 默认0.5保持旧行为.
+        settle_time: 每次校正后的等待时间. 默认0.5保持旧行为.
         """
         if tar_p[1] >= 595:
-            if not AUTOCalibration_P([tar_p[0], 450], tar_s,roi):
+            if not AUTOCalibration_P([tar_p[0], 450], tar_s, roi, gain, settle_time):
                 return False
         if roi == None:
             roi = [[175,89,1177,719]]
@@ -1002,11 +1004,11 @@ def Factory():
                 delta = [round((pos[0]-tar_p[0])), round((pos[1]-tar_p[1]))]
                 if (abs(delta[0]) <= 3+setting._FPS_ADJUSTER*2) and (abs(delta[1]) <= 3+setting._FPS_ADJUSTER*2):
                     return True
-                delta[0] = int(delta[0]/2)
-                delta[1] = int(delta[1]/2)
+                delta[0] = int(delta[0] * gain)
+                delta[1] = int(delta[1] * gain)
                 logger.debug(f"自动校正 目标{pos} 移动{delta[0]//setting._FPS_ADJUSTER} {delta[1]//setting._FPS_ADJUSTER}")
                 DeviceShell(f"input swipe 1200 225 {delta[0]//setting._FPS_ADJUSTER+1200} {delta[1]//setting._FPS_ADJUSTER+225} {1500*setting._FPS_ADJUSTER-1000}")
-                Sleep(0.5)
+                Sleep(settle_time)
         return False
     ##################################################################
     def goAndCheckLetter():
@@ -1175,14 +1177,15 @@ def Factory():
                     return True
                 return False
             case "夜航手册65" | "夜航手册30":
+                calibration_kwargs = {"gain": 0.6, "settle_time": 0.35} if setting._FARM_LVL == "65" else {}
                 Sleep(2)
                 GoBack(1000)
                 GoLeft(6000)
                 GoForward(11300)
                 DeviceShell(f"input swipe 800 225 {(800-728/setting._FPS_ADJUSTER)} 225 500")
-                AUTOCalibration_P([800,600])
+                AUTOCalibration_P([800,600], **calibration_kwargs)
                 CastSpearRush(4)
-                AUTOCalibration_P()
+                AUTOCalibration_P(**calibration_kwargs)
                 GoForward(6000)
 
                 if not ResetPosition():
