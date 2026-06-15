@@ -1196,7 +1196,7 @@ def Factory():
                     GoForward(3000)
                     GoLeft(1800)
                     GoForward(3000)
-                    GoLeft(1570)
+                    GoLeft(1600)
                     GoForward(10000)
                     AUTOCalibration_Y()
                     GoForward(10000)
@@ -1649,13 +1649,13 @@ def Factory():
                     if setting._FORCESTOPING.is_set():
                         logger.info("检测到停止请求, 结束钓鱼处理.")
                         return True
-                    Press([802,741])
+                    Press([385,421])
                     if CheckIf(scn, "悠闲钓鱼_无鱼"):
                         logger.info("检测到无鱼提示，停止钓鱼。")
                         setting._FORCESTOPING.set()
                         return False
                     if (not CheckIfInDungeon(scn)) and (not CheckIf(scn,"悠闲钓鱼_钓到鱼了")) and (not CheckIf(scn,"悠闲钓鱼_新图鉴")):
-                        Press([802,741])
+                        Press([385,421])
                         if quit_counter % 10 == 0:
                             logger.info(f"不在钓鱼界面.({quit_counter // 10})")
                         quit_counter +=1
@@ -1663,11 +1663,7 @@ def Factory():
                     Press(CheckIf(scn,"悠闲钓鱼_收杆"))
                     Press(CheckIf(scn,"悠闲钓鱼_授鱼以鱼"))
                     if (pos1:=CheckIf(scn,"悠闲钓鱼_钓到鱼了")) or (pos2:=CheckIf(scn,"悠闲钓鱼_新图鉴")):
-                        logger.info("钓到鱼了!")
-                        if pos1:
-                            Press(pos1)
-                        else:
-                            Press(pos2)
+                        Press([385,421])
                         Sleep(3)
                         counter+=1
                         logger.info(f"钓到了{counter}条鱼, 累计用时{(time.time()-t):.2f}秒.", extra={"summary": True})                    
