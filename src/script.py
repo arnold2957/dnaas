@@ -842,9 +842,9 @@ def Factory():
     def QuitDungeon():
         runtimeContext._GAME_COUNTER -= 1 # 因为退出流程后我们会看见再次挑战, 看见再次挑战会加1, 所以我们提前扣掉这一次.
         try:
-            FindCoordsOrElseExecuteFallbackAndWait(["任务图标","放弃挑战","放弃挑战_云","再次进行"],['indungeon','indungeon_cloud'],2)
+            FindCoordsOrElseExecuteFallbackAndWait(["任务图标","任务图标_云", "放弃挑战","放弃挑战_云","再次进行"],['indungeon','indungeon_cloud'],2)
             scn = ScreenShot()
-            if CheckIf(scn,"任务图标",[[10,200,100,100]]):
+            if CheckIf(scn,"任务图标",[[10,200,100,100]]) or CheckIf(scn,"任务图标_云",[[10,200,100,100]]):
                 logger.info("奇怪, 怎么已经退出了.")
                 return
             if CheckIf(scn,"放弃挑战") or CheckIf(scn,"放弃挑战_云"):
@@ -1683,7 +1683,7 @@ def Factory():
             return False
         @register()
         def handle_menu(scn):
-            if CheckIf(scn, "任务图标",[[10,200,100,100]]):
+            if CheckIf(scn, "任务图标",[[10,200,100,100]]) or CheckIf(scn,"任务图标_云",[[10,200,100,100]]):
                 logger.info("任务菜单.")
                 Press([63,27])
                 Sleep(2)
