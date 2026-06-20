@@ -1,7 +1,7 @@
 from gui import *
 import argparse
 
-__version__ = '1.2.14' 
+__version__ = '1.2.15' 
 OWNER = "arnold2957"
 REPO = "dnaas"
 # 

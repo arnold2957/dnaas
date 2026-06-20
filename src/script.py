@@ -15,13 +15,13 @@ import copy
 import math
 
 DUNGEON_TARGETS = {
-    "角色经验": {"50":5},
+    # "角色经验": {"50":5},
     "角色材料": {"10":1, "30":3, "60":6},
-    "武器突破": {"60":5, "70":6},
+    # "武器突破": {"60":5, "70":6},
     "皎皎币":   {"50":2,"60":3,"70":4},
     "夜航手册": {"30":2, "40":3,"50":4,"55":5, "60":6,"65":7,"70":6,"75":7,"80":8},
     "魔之楔(不是夜航手册!)": {"40":1, "60": 2, "80":3, "100":4},
-    "mod强化": {"60":4, "60(测试)":4},
+    # "mod强化": {"60":4, "60(测试)":4},
     "钓鱼": {"悠闲":0},
     "迷津": {"默认难度":0},
     "测试": {"测试":0}
@@ -844,7 +844,7 @@ def Factory():
         try:
             FindCoordsOrElseExecuteFallbackAndWait(["任务图标","放弃挑战","放弃挑战_云","再次进行"],['indungeon','indungeon_cloud'],2)
             scn = ScreenShot()
-            if CheckIf(scn,"任务图标"):
+            if CheckIf(scn,"任务图标",[[10,200,100,100]]):
                 logger.info("奇怪, 怎么已经退出了.")
                 return
             if CheckIf(scn,"放弃挑战") or CheckIf(scn,"放弃挑战_云"):
@@ -1683,7 +1683,7 @@ def Factory():
             return False
         @register()
         def handle_menu(scn):
-            if CheckIf(scn, "任务图标"):
+            if CheckIf(scn, "任务图标",[[10,200,100,100]]):
                 logger.info("任务菜单.")
                 Press([63,27])
                 Sleep(2)
